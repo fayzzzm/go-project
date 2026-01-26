@@ -2,10 +2,10 @@ package http
 
 import (
 	"context"
+	"net/http"
 
 	"github.com/fayzzzm/go-project/internal/middleware"
 	"github.com/fayzzzm/go-project/internal/usecase"
-	"github.com/fayzzzm/go-project/pkg/reply"
 	"github.com/gin-gonic/gin"
 )
 
@@ -26,67 +26,37 @@ func NewDeviceProfileController(r gin.IRouter, uc DeviceProfileUseCase) {
 
 	dps := r.Group("/device_profiles")
 	{
-		dps.POST("", middleware.BindJSON[usecase.CreateDeviceProfileInput](), c.Create)
-		dps.GET("", c.List)
-		dps.GET("/:id", c.GetByID)
-		dps.PUT("/:id", middleware.BindJSON[usecase.UpdateDeviceProfileInput](), c.Update)
-		dps.DELETE("/:id", c.Delete)
+		dps.POST("", middleware.BindJSON[usecase.CreateDeviceProfileInput](), Handle(c.Create, http.StatusCreated))
+		dps.GET("", Handle(c.List, http.StatusOK))
+		dps.GET("/:id", Handle(c.GetByID, http.StatusOK))
+		dps.PUT("/:id", middleware.BindJSON[usecase.UpdateDeviceProfileInput](), Handle(c.Update, http.StatusOK))
+		dps.DELETE("/:id", Handle(c.Delete, http.StatusNoContent))
 	}
 }
 
-func (c *DeviceProfileController) Create(ctx *gin.Context) {
+func (c *DeviceProfileController) Create(ctx *gin.Context) (any, error) {
 	input := middleware.GetBody[usecase.CreateDeviceProfileInput](ctx)
-
-	output, err := c.uc.Create(ctx.Request.Context(), input)
-	if err != nil {
-		ctx.Error(err)
-		return
-	}
-
-	reply.Created(ctx, output)
+	return c.uc.Create(ctx.Request.Context(), input)
 }
 
-func (c *DeviceProfileController) GetByID(ctx *gin.Context) {
+func (c *DeviceProfileController) GetByID(ctx *gin.Context) (any, error) {
 	id := ctx.Param("id")
-	output, err := c.uc.GetByID(ctx.Request.Context(), id)
-	if err != nil {
-		ctx.Error(err)
-		return
-	}
-	reply.OK(ctx, output)
+	return c.uc.GetByID(ctx.Request.Context(), id)
 }
 
-func (c *DeviceProfileController) List(ctx *gin.Context) {
-	limit := 100
-	offset := 0
-
-	output, err := c.uc.List(ctx.Request.Context(), limit, offset)
-	if err != nil {
-		ctx.Error(err)
-		return
-	}
-	reply.OK(ctx, output)
+func (c *DeviceProfileController) List(ctx *gin.Context) (any, error) {
+	limit, offset := middleware.GetPagination(ctx)
+	return c.uc.List(ctx.Request.Context(), limit, offset)
 }
 
-func (c *DeviceProfileController) Update(ctx *gin.Context) {
+func (c *DeviceProfileController) Update(ctx *gin.Context) (any, error) {
 	id := ctx.Param("id")
 	input := middleware.GetBody[usecase.UpdateDeviceProfileInput](ctx)
-
-	output, err := c.uc.Update(ctx.Request.Context(), id, input)
-	if err != nil {
-		ctx.Error(err)
-		return
-	}
-
-	reply.OK(ctx, output)
+	return c.uc.Update(ctx.Request.Context(), id, input)
 }
 
-func (c *DeviceProfileController) Delete(ctx *gin.Context) {
+func (c *DeviceProfileController) Delete(ctx *gin.Context) (any, error) {
 	id := ctx.Param("id")
 	err := c.uc.Delete(ctx.Request.Context(), id)
-	if err != nil {
-		ctx.Error(err)
-		return
-	}
-	reply.Deleted(ctx, gin.H{"id": id, "deleted": true})
+	return nil, err
 }

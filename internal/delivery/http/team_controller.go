@@ -2,10 +2,10 @@ package http
 
 import (
 	"context"
+	"net/http"
 
 	"github.com/fayzzzm/go-project/internal/middleware"
 	"github.com/fayzzzm/go-project/internal/usecase"
-	"github.com/fayzzzm/go-project/pkg/reply"
 	"github.com/gin-gonic/gin"
 )
 
@@ -26,68 +26,39 @@ func NewTeamController(r gin.IRouter, uc TeamUseCase) {
 
 	teams := r.Group("/teams")
 	{
-		teams.POST("", middleware.BindJSON[usecase.CreateTeamInput](), c.Create)
-		teams.GET("", c.List)
-		teams.GET("/:id", c.GetByID)
-		teams.PUT("/:id", middleware.BindJSON[usecase.UpdateTeamInput](), c.Update)
-		teams.DELETE("/:id", c.Delete)
+		teams.POST("", middleware.BindJSON[usecase.CreateTeamInput](), Handle(c.Create, http.StatusCreated))
+		teams.GET("", Handle(c.List, http.StatusOK))
+		teams.GET("/:id", Handle(c.GetByID, http.StatusOK))
+		teams.PUT("/:id", middleware.BindJSON[usecase.UpdateTeamInput](), Handle(c.Update, http.StatusOK))
+		teams.DELETE("/:id", Handle(c.Delete, http.StatusNoContent))
 	}
 }
 
-func (c *TeamController) Create(ctx *gin.Context) {
+func (c *TeamController) Create(ctx *gin.Context) (any, error) {
 	input := middleware.GetBody[usecase.CreateTeamInput](ctx)
-
-	output, err := c.uc.Create(ctx.Request.Context(), input)
-	if err != nil {
-		ctx.Error(err)
-		return
-	}
-
-	reply.Created(ctx, output)
+	return c.uc.Create(ctx.Request.Context(), input)
 }
 
-func (c *TeamController) GetByID(ctx *gin.Context) {
+func (c *TeamController) GetByID(ctx *gin.Context) (any, error) {
 	id := ctx.Param("id")
-	output, err := c.uc.GetByID(ctx.Request.Context(), id)
-	if err != nil {
-		ctx.Error(err)
-		return
-	}
-	reply.OK(ctx, output)
+	return c.uc.GetByID(ctx.Request.Context(), id)
 }
 
-func (c *TeamController) List(ctx *gin.Context) {
-	limit := 100
-	offset := 0
+func (c *TeamController) List(ctx *gin.Context) (any, error) {
+	limit, offset := middleware.GetPagination(ctx)
 	tenantID := ctx.GetHeader("X-Tenant-ID")
 
-	output, err := c.uc.List(ctx.Request.Context(), limit, offset, tenantID)
-	if err != nil {
-		ctx.Error(err)
-		return
-	}
-	reply.OK(ctx, output)
+	return c.uc.List(ctx.Request.Context(), limit, offset, tenantID)
 }
 
-func (c *TeamController) Update(ctx *gin.Context) {
+func (c *TeamController) Update(ctx *gin.Context) (any, error) {
 	id := ctx.Param("id")
 	input := middleware.GetBody[usecase.UpdateTeamInput](ctx)
-
-	output, err := c.uc.Update(ctx.Request.Context(), id, input)
-	if err != nil {
-		ctx.Error(err)
-		return
-	}
-
-	reply.OK(ctx, output)
+	return c.uc.Update(ctx.Request.Context(), id, input)
 }
 
-func (c *TeamController) Delete(ctx *gin.Context) {
+func (c *TeamController) Delete(ctx *gin.Context) (any, error) {
 	id := ctx.Param("id")
 	err := c.uc.Delete(ctx.Request.Context(), id)
-	if err != nil {
-		ctx.Error(err)
-		return
-	}
-	reply.Deleted(ctx, gin.H{"id": id, "deleted": true})
+	return nil, err
 }

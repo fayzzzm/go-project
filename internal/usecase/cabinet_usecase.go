@@ -74,6 +74,15 @@ func (uc *CabinetUseCase) GetByID(ctx context.Context, id string) (*CabinetOutpu
 }
 
 func (uc *CabinetUseCase) List(ctx context.Context, limit, offset int) ([]CabinetOutput, error) {
+	if limit <= 0 {
+		limit = 100
+	}
+	if limit > 1000 {
+		limit = 1000
+	}
+	if offset < 0 {
+		offset = 0
+	}
 	cabinets, err := uc.svc.List(ctx, limit, offset)
 	if err != nil {
 		return nil, err

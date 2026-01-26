@@ -2,10 +2,10 @@ package http
 
 import (
 	"context"
+	"net/http"
 
 	"github.com/fayzzzm/go-project/internal/middleware"
 	"github.com/fayzzzm/go-project/internal/usecase"
-	"github.com/fayzzzm/go-project/pkg/reply"
 	"github.com/gin-gonic/gin"
 )
 
@@ -26,68 +26,40 @@ func NewUserController(r gin.IRouter, uc UserUseCase) {
 
 	users := r.Group("/users")
 	{
-		users.POST("", middleware.BindJSON[usecase.CreateUserInput](), c.Create)
-		users.GET("", c.List)
-		users.GET("/:id", c.GetByID)
-		users.PUT("/:id", middleware.BindJSON[usecase.UpdateUserInput](), c.Update)
-		users.DELETE("/:id", c.Delete)
+		users.POST("", middleware.BindJSON[usecase.CreateUserInput](), Handle(c.Create, http.StatusCreated))
+		users.GET("", Handle(c.List, http.StatusOK))
+		users.GET("/:id", Handle(c.GetByID, http.StatusOK))
+		users.PUT("/:id", middleware.BindJSON[usecase.UpdateUserInput](), Handle(c.Update, http.StatusOK))
+		users.DELETE("/:id", Handle(c.Delete, http.StatusNoContent))
 	}
 }
 
-func (c *UserController) Create(ctx *gin.Context) {
+func (c *UserController) Create(ctx *gin.Context) (any, error) {
 	input := middleware.GetBody[usecase.CreateUserInput](ctx)
 
-	output, err := c.uc.Create(ctx.Request.Context(), input)
-	if err != nil {
-		ctx.Error(err)
-		return
-	}
-
-	reply.Created(ctx, output)
+	return c.uc.Create(ctx.Request.Context(), input)
 }
 
-func (c *UserController) GetByID(ctx *gin.Context) {
+func (c *UserController) GetByID(ctx *gin.Context) (any, error) {
 	id := ctx.Param("id")
-	output, err := c.uc.GetByID(ctx.Request.Context(), id)
-	if err != nil {
-		ctx.Error(err)
-		return
-	}
-	reply.OK(ctx, output)
+	return c.uc.GetByID(ctx.Request.Context(), id)
 }
 
-func (c *UserController) List(ctx *gin.Context) {
-	// TODO: Parse limit/offset from query params
-	limit := 100
-	offset := 0
+func (c *UserController) List(ctx *gin.Context) (any, error) {
+	limit, offset := middleware.GetPagination(ctx)
 
-	output, err := c.uc.List(ctx.Request.Context(), limit, offset)
-	if err != nil {
-		ctx.Error(err)
-		return
-	}
-	reply.OK(ctx, output)
+	return c.uc.List(ctx.Request.Context(), limit, offset)
 }
 
-func (c *UserController) Update(ctx *gin.Context) {
+func (c *UserController) Update(ctx *gin.Context) (any, error) {
 	id := ctx.Param("id")
 	input := middleware.GetBody[usecase.UpdateUserInput](ctx)
 
-	output, err := c.uc.Update(ctx.Request.Context(), id, input)
-	if err != nil {
-		ctx.Error(err)
-		return
-	}
-
-	reply.OK(ctx, output)
+	return c.uc.Update(ctx.Request.Context(), id, input)
 }
 
-func (c *UserController) Delete(ctx *gin.Context) {
+func (c *UserController) Delete(ctx *gin.Context) (any, error) {
 	id := ctx.Param("id")
 	err := c.uc.Delete(ctx.Request.Context(), id)
-	if err != nil {
-		ctx.Error(err)
-		return
-	}
-	reply.Deleted(ctx, gin.H{"id": id, "deleted": true})
+	return nil, err
 }

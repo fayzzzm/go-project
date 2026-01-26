@@ -25,6 +25,7 @@ func main() {
 		fx.Provide(
 			NewDatabasePool,
 			NewGinEngine,
+			NewAPIGroup,
 
 			// 1. Repositories -> Service Interfaces (Consumer defined)
 			fx.Annotate(
@@ -91,11 +92,16 @@ func main() {
 				usecase.NewDeviceProfileUseCase,
 				fx.As(new(delivery.DeviceProfileUseCase)),
 			),
-
-			// 4. Controllers
 		),
 		fx.Invoke(
-			RegisterRoutes,
+			// 4. Controllers
+			delivery.NewDeviceController,
+			delivery.NewUserController,
+			delivery.NewCabinetController,
+			delivery.NewTeamController,
+			delivery.NewDeviceProfileController,
+
+			StartServer,
 		),
 	).Run()
 }
@@ -160,23 +166,11 @@ func NewGinEngine() *gin.Engine {
 	return r
 }
 
-func RegisterRoutes(
-	lc fx.Lifecycle,
-	r *gin.Engine,
-	deviceUC delivery.DeviceUseCase,
-	userUC delivery.UserUseCase,
-	cabinetUC delivery.CabinetUseCase,
-	teamUC delivery.TeamUseCase,
-	deviceProfileUC delivery.DeviceProfileUseCase,
-) {
-	api := r.Group("/api/v1")
+func NewAPIGroup(r *gin.Engine) gin.IRouter {
+	return r.Group("/api/v1")
+}
 
-	delivery.NewDeviceController(api, deviceUC)
-	delivery.NewUserController(api, userUC)
-	delivery.NewCabinetController(api, cabinetUC)
-	delivery.NewTeamController(api, teamUC)
-	delivery.NewDeviceProfileController(api, deviceProfileUC)
-
+func StartServer(lc fx.Lifecycle, r *gin.Engine) {
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"

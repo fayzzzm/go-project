@@ -85,6 +85,15 @@ func (uc *UserUseCase) GetByID(ctx context.Context, id string) (*UserOutput, err
 }
 
 func (uc *UserUseCase) List(ctx context.Context, limit, offset int) ([]UserOutput, error) {
+	if limit <= 0 {
+		limit = 100
+	}
+	if limit > 1000 {
+		limit = 1000
+	}
+	if offset < 0 {
+		offset = 0
+	}
 	users, err := uc.svc.List(ctx, limit, offset)
 	if err != nil {
 		return nil, err

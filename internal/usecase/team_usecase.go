@@ -76,6 +76,15 @@ func (uc *TeamUseCase) GetByID(ctx context.Context, id string) (*TeamOutput, err
 }
 
 func (uc *TeamUseCase) List(ctx context.Context, limit, offset int, tenantID string) ([]TeamOutput, error) {
+	if limit <= 0 {
+		limit = 100
+	}
+	if limit > 1000 {
+		limit = 1000
+	}
+	if offset < 0 {
+		offset = 0
+	}
 	teams, err := uc.svc.List(ctx, limit, offset, tenantID)
 	if err != nil {
 		return nil, err

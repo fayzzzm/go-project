@@ -76,6 +76,15 @@ func (uc *DeviceProfileUseCase) GetByID(ctx context.Context, id string) (*Device
 }
 
 func (uc *DeviceProfileUseCase) List(ctx context.Context, limit, offset int) ([]DeviceProfileOutput, error) {
+	if limit <= 0 {
+		limit = 100
+	}
+	if limit > 1000 {
+		limit = 1000
+	}
+	if offset < 0 {
+		offset = 0
+	}
 	dps, err := uc.svc.List(ctx, limit, offset)
 	if err != nil {
 		return nil, err

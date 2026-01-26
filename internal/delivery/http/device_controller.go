@@ -24,38 +24,23 @@ func NewDeviceController(r gin.IRouter, uc DeviceUseCase) {
 
 	devices := r.Group("/devices")
 	{
-		devices.POST("", middleware.BindJSON[usecase.CreateDeviceInput](), c.Create)
-		devices.GET("/:id", c.GetByID)
-		devices.GET("", c.List)
+		devices.POST("", middleware.BindJSON[usecase.CreateDeviceInput](), Handle(c.Create, http.StatusCreated))
+		devices.GET("/:id", Handle(c.GetByID, http.StatusOK))
+		devices.GET("", Handle(c.List, http.StatusOK))
 	}
 }
 
-func (c *DeviceController) Create(ctx *gin.Context) {
+func (c *DeviceController) Create(ctx *gin.Context) (any, error) {
 	input := middleware.GetBody[usecase.CreateDeviceInput](ctx)
-
-	output, err := c.uc.Create(ctx.Request.Context(), input)
-	if err != nil {
-		ctx.Error(err)
-		return
-	}
-	ctx.JSON(http.StatusCreated, output)
+	return c.uc.Create(ctx.Request.Context(), input)
 }
 
-func (c *DeviceController) GetByID(ctx *gin.Context) {
+func (c *DeviceController) GetByID(ctx *gin.Context) (any, error) {
 	id := ctx.Param("id")
-	output, err := c.uc.GetByID(ctx.Request.Context(), id)
-	if err != nil {
-		ctx.Error(err)
-		return
-	}
-	ctx.JSON(http.StatusOK, output)
+	return c.uc.GetByID(ctx.Request.Context(), id)
 }
 
-func (c *DeviceController) List(ctx *gin.Context) {
-	devices, err := c.uc.List(ctx.Request.Context(), 10, 0)
-	if err != nil {
-		ctx.Error(err)
-		return
-	}
-	ctx.JSON(http.StatusOK, devices)
+func (c *DeviceController) List(ctx *gin.Context) (any, error) {
+	limit, offset := middleware.GetPagination(ctx)
+	return c.uc.List(ctx.Request.Context(), limit, offset)
 }
