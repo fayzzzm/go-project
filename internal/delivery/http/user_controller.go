@@ -9,7 +9,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// UserUseCase is defined by the consumer (Controller).
 type UserUseCase interface {
 	Create(ctx context.Context, input usecase.CreateUserInput) (*usecase.UserOutput, error)
 	GetByID(ctx context.Context, id string) (*usecase.UserOutput, error)

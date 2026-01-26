@@ -67,7 +67,7 @@ func (r *UserRepo) Update(ctx context.Context, u *domain.User) error {
 
 	req := UserRequest{
 		ID:           &u.ID,
-		Name:         u.Name, // Already *string
+		Name:         u.Name,
 		Address:      u.Address,
 		Phone:        u.Phone,
 		Role:         role,

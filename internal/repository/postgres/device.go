@@ -27,25 +27,14 @@ const (
 )
 
 func (r *DeviceRepo) Create(ctx context.Context, d *domain.Device) error {
-	var profileID, cabinetID, teamID *string
-	if d.DeviceProfileID != "" {
-		profileID = &d.DeviceProfileID
-	}
-	if d.CabinetID != "" {
-		cabinetID = &d.CabinetID
-	}
-	if d.TeamID != "" {
-		teamID = &d.TeamID
-	}
-
 	req := DeviceRequest{
 		Name:            &d.Name,
 		Description:     &d.Description,
 		SerialNumber:    &d.SerialNumber,
 		EPC:             &d.EPC,
-		DeviceProfileID: profileID,
-		CabinetID:       cabinetID,
-		TeamID:          teamID,
+		DeviceProfileID: d.DeviceProfileID,
+		CabinetID:       d.CabinetID,
+		TeamID:          d.TeamID,
 		TenantID:        &d.TenantID,
 	}
 	val, err := ExecQueryOne[domain.Device](ctx, r.pool, queryDeviceCreate, req)
@@ -68,9 +57,9 @@ func (r *DeviceRepo) Update(ctx context.Context, d *domain.Device) error {
 		Description:     &d.Description,
 		SerialNumber:    &d.SerialNumber,
 		EPC:             &d.EPC,
-		DeviceProfileID: &d.DeviceProfileID,
-		CabinetID:       &d.CabinetID,
-		TeamID:          &d.TeamID,
+		DeviceProfileID: d.DeviceProfileID,
+		CabinetID:       d.CabinetID,
+		TeamID:          d.TeamID,
 		TenantID:        &d.TenantID,
 	}
 	val, err := ExecQueryOne[domain.Device](ctx, r.pool, queryDeviceUpdate, req)
@@ -110,9 +99,9 @@ func (r *DeviceRepo) BulkCreate(ctx context.Context, devices []domain.Device) er
 			Description:     &d.Description,
 			SerialNumber:    &d.SerialNumber,
 			EPC:             &d.EPC,
-			DeviceProfileID: &d.DeviceProfileID,
-			CabinetID:       &d.CabinetID,
-			TeamID:          &d.TeamID,
+			DeviceProfileID: d.DeviceProfileID,
+			CabinetID:       d.CabinetID,
+			TeamID:          d.TeamID,
 		}
 	}
 	_, err := r.pool.Exec(ctx, queryDeviceBulkCreate, requests)

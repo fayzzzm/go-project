@@ -44,10 +44,20 @@ func NewTeamUseCase(svc TeamServicer) *TeamUseCase {
 }
 
 func (uc *TeamUseCase) Create(ctx context.Context, input CreateTeamInput) (*TeamOutput, error) {
+	var status *string
+	if input.Status != "" {
+		val := input.Status
+		status = &val
+	}
+	var tenantID *string
+	if input.TenantID != "" {
+		val := input.TenantID
+		tenantID = &val
+	}
 	team := &domain.Team{
 		Name:     input.Name,
-		Status:   input.Status,
-		TenantID: input.TenantID,
+		Status:   status,
+		TenantID: tenantID,
 	}
 
 	if err := uc.svc.Create(ctx, team); err != nil {
@@ -86,7 +96,8 @@ func (uc *TeamUseCase) Update(ctx context.Context, id string, input UpdateTeamIn
 		team.Name = input.Name
 	}
 	if input.Status != "" {
-		team.Status = input.Status
+		val := input.Status
+		team.Status = &val
 	}
 
 	if err := uc.svc.Update(ctx, team); err != nil {
@@ -100,11 +111,19 @@ func (uc *TeamUseCase) Delete(ctx context.Context, id string) error {
 }
 
 func toTeamOutput(t *domain.Team) *TeamOutput {
+	status := ""
+	if t.Status != nil {
+		status = *t.Status
+	}
+	tenantID := ""
+	if t.TenantID != nil {
+		tenantID = *t.TenantID
+	}
 	return &TeamOutput{
 		ID:        t.ID,
 		Name:      t.Name,
-		Status:    t.Status,
-		TenantID:  t.TenantID,
+		Status:    status,
+		TenantID:  tenantID,
 		CreatedAt: t.CreatedAt,
 		UpdatedAt: t.UpdatedAt,
 	}

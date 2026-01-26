@@ -6,7 +6,6 @@ import (
 	"github.com/fayzzzm/go-project/internal/domain"
 )
 
-// CabinetServicer is defined by the consumer (UseCase).
 type CabinetServicer interface {
 	Create(ctx context.Context, c *domain.Cabinet) error
 	GetByID(ctx context.Context, id string) (*domain.Cabinet, error)

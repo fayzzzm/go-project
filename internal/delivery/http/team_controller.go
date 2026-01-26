@@ -37,11 +37,6 @@ func NewTeamController(r gin.IRouter, uc TeamUseCase) {
 func (c *TeamController) Create(ctx *gin.Context) {
 	input := middleware.GetBody[usecase.CreateTeamInput](ctx)
 
-	// If tenant ID is missing in body, try to get it from header/context
-	if input.TenantID == "" {
-		input.TenantID = ctx.GetHeader("X-Tenant-ID")
-	}
-
 	output, err := c.uc.Create(ctx.Request.Context(), input)
 	if err != nil {
 		ctx.Error(err)

@@ -9,7 +9,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// DeviceUseCase is defined by the consumer (Handler).
 type DeviceUseCase interface {
 	Create(ctx context.Context, input usecase.CreateDeviceInput) (*usecase.DeviceOutput, error)
 	GetByID(ctx context.Context, id string) (*usecase.DeviceOutput, error)

@@ -8,7 +8,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// CabinetUseCase is defined by the consumer (Controller).
 type CabinetUseCase interface {
 	Create(ctx context.Context, input usecase.CreateCabinetInput) (*usecase.CabinetOutput, error)
 	GetByID(ctx context.Context, id string) (*usecase.CabinetOutput, error)

@@ -6,7 +6,6 @@ import (
 	"github.com/fayzzzm/go-project/internal/domain"
 )
 
-// UserServicer is defined by the consumer (UseCase).
 type UserServicer interface {
 	Create(ctx context.Context, u *domain.User) error
 	GetByID(ctx context.Context, id string) (*domain.User, error)

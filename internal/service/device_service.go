@@ -6,7 +6,6 @@ import (
 	"github.com/fayzzzm/go-project/internal/domain"
 )
 
-// DeviceRepository is defined by the consumer (the service).
 type DeviceRepository interface {
 	Create(ctx context.Context, d *domain.Device) error
 	GetByID(ctx context.Context, id string) (*domain.Device, error)

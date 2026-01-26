@@ -1,6 +1,5 @@
 package postgres
 
-// DeviceRequest matches a PostgreSQL composite type for device operations
 type DeviceRequest struct {
 	ID              *string `db:"id"`
 	Name            *string `db:"name"`
@@ -15,7 +14,6 @@ type DeviceRequest struct {
 	OffsetVal       *int    `db:"offset_val"`
 }
 
-// UserRequest matches a PostgreSQL composite type for user operations
 type UserRequest struct {
 	ID           *string                `db:"id"`
 	Email        *string                `db:"email"`
@@ -29,7 +27,6 @@ type UserRequest struct {
 	OffsetVal    *int                   `db:"offset_val"`
 }
 
-// CabinetRequest matches a PostgreSQL composite type for cabinet operations
 type CabinetRequest struct {
 	ID          *string `db:"id"`
 	Name        *string `db:"name"`
@@ -43,7 +40,6 @@ type CabinetRequest struct {
 	OffsetVal   *int    `db:"offset_val"`
 }
 
-// TeamRequest matches a PostgreSQL composite type for team operations
 type TeamRequest struct {
 	ID        *string `db:"id"`
 	Name      *string `db:"name"`
@@ -53,7 +49,6 @@ type TeamRequest struct {
 	OffsetVal *int    `db:"offset_val"`
 }
 
-// DeviceProfileRequest matches a PostgreSQL composite type for device profile operations
 type DeviceProfileRequest struct {
 	ID          *string `db:"id"`
 	Name        *string `db:"name"`

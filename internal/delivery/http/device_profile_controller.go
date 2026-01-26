@@ -37,11 +37,6 @@ func NewDeviceProfileController(r gin.IRouter, uc DeviceProfileUseCase) {
 func (c *DeviceProfileController) Create(ctx *gin.Context) {
 	input := middleware.GetBody[usecase.CreateDeviceProfileInput](ctx)
 
-	// In some designs, DeviceProfile might not be multi-tenant or might need tenant_id
-	if input.TenantID == "" {
-		input.TenantID = ctx.GetHeader("X-Tenant-ID")
-	}
-
 	output, err := c.uc.Create(ctx.Request.Context(), input)
 	if err != nil {
 		ctx.Error(err)

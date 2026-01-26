@@ -24,21 +24,10 @@ const (
 )
 
 func (r *DeviceProfileRepo) Create(ctx context.Context, dp *domain.DeviceProfile) error {
-	var desc *string
-	if dp.Description != "" {
-		val := dp.Description
-		desc = &val
-	}
-	var tenantID *string
-	if dp.TenantID != "" {
-		val := dp.TenantID
-		tenantID = &val
-	}
-
 	req := DeviceProfileRequest{
 		Name:        &dp.Name,
-		Description: desc,
-		TenantID:    tenantID,
+		Description: dp.Description,
+		TenantID:    dp.TenantID,
 	}
 
 	val, err := ExecQueryOne[domain.DeviceProfile](ctx, r.pool, queryDeviceProfileCreate, req)
@@ -55,16 +44,10 @@ func (r *DeviceProfileRepo) GetByID(ctx context.Context, id string) (*domain.Dev
 }
 
 func (r *DeviceProfileRepo) Update(ctx context.Context, dp *domain.DeviceProfile) error {
-	var desc *string
-	if dp.Description != "" {
-		val := dp.Description
-		desc = &val
-	}
-
 	req := DeviceProfileRequest{
 		ID:          &dp.ID,
 		Name:        &dp.Name,
-		Description: desc,
+		Description: dp.Description,
 	}
 	val, err := ExecQueryOne[domain.DeviceProfile](ctx, r.pool, queryDeviceProfileUpdate, req)
 	if err != nil {

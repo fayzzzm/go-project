@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"net/http"
+	"reflect"
 
 	"github.com/gin-gonic/gin"
 )
@@ -37,6 +38,19 @@ func BindJSON[T any]() gin.HandlerFunc {
 				c.JSON(http.StatusBadRequest, gin.H{"error": msg})
 				c.Abort()
 				return
+			}
+		}
+
+		// Inject X-Tenant-ID if struct has TenantID field and header is present
+		if tenantID := c.GetHeader("X-Tenant-ID"); tenantID != "" {
+			val := reflect.ValueOf(&input).Elem()
+			if val.Kind() == reflect.Struct {
+				field := val.FieldByName("TenantID")
+				if field.IsValid() && field.CanSet() && field.Kind() == reflect.String {
+					if field.String() == "" {
+						field.SetString(tenantID)
+					}
+				}
 			}
 		}
 

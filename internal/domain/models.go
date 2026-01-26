@@ -8,8 +8,8 @@ import (
 type DeviceProfile struct {
 	ID          string    `json:"id" db:"id"`
 	Name        string    `json:"name" db:"name"`
-	Description string    `json:"description" db:"description"`
-	TenantID    string    `json:"tenant_id" db:"tenant_id"`
+	Description *string   `json:"description" db:"description"`
+	TenantID    *string   `json:"tenant_id" db:"tenant_id"`
 	CreatedAt   time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at" db:"updated_at"`
 }
@@ -21,10 +21,10 @@ type Device struct {
 	Description      string    `json:"description" db:"description"`
 	SerialNumber     string    `json:"serial_number" db:"serial_number"`
 	EPC              string    `json:"epc" db:"epc"`
-	DeviceProfileID  string    `json:"device_profile_id" db:"device_profile_id"`
+	DeviceProfileID  *string   `json:"device_profile_id" db:"device_profile_id"`
 	DeviceStatusID   string    `json:"device_status_id" db:"device_status_id"`
-	CabinetID        string    `json:"cabinet_id" db:"cabinet_id"`
-	TeamID           string    `json:"team_id" db:"team_id"`
+	CabinetID        *string   `json:"cabinet_id" db:"cabinet_id"`
+	TeamID           *string   `json:"team_id" db:"team_id"`
 	TenantID         string    `json:"tenant_id" db:"tenant_id"`
 	Owner            string    `json:"owner" db:"owner"`
 	OwnerModifiedAt  time.Time `json:"owner_modified_at" db:"owner_modified_at"`
@@ -43,7 +43,7 @@ type Cabinet struct {
 	Description *string   `json:"description" db:"description"`
 	Location    *string   `json:"location" db:"location"` // Address/Location
 	MachineID   *string   `json:"machine_id" db:"machine_id"`
-	Status      string    `json:"status" db:"status"`
+	Status      *string   `json:"status" db:"status"`
 	TeamID      *string   `json:"team_id" db:"team_id"`
 	TenantID    *string   `json:"tenant_id" db:"tenant_id"`
 	CreatedAt   time.Time `json:"created_at" db:"created_at"`
@@ -57,8 +57,8 @@ type Cabinet struct {
 type Team struct {
 	ID        string    `json:"id" db:"id"`
 	Name      string    `json:"name" db:"name"`
-	Status    string    `json:"status" db:"status"`
-	TenantID  string    `json:"tenant_id" db:"tenant_id"`
+	Status    *string   `json:"status" db:"status"`
+	TenantID  *string   `json:"tenant_id" db:"tenant_id"`
 	CreatedAt time.Time `json:"created_at" db:"created_at"`
 	CreatedBy string    `json:"created_by" db:"created_by"`
 	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`

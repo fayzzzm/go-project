@@ -6,7 +6,6 @@ import (
 	"github.com/fayzzzm/go-project/internal/domain"
 )
 
-// TeamRepository defined locally by consumer
 type TeamRepository interface {
 	Create(ctx context.Context, t *domain.Team) error
 	GetByID(ctx context.Context, id string) (*domain.Team, error)

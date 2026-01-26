@@ -24,21 +24,10 @@ const (
 )
 
 func (r *TeamRepo) Create(ctx context.Context, t *domain.Team) error {
-	var status *string
-	if t.Status != "" {
-		val := t.Status
-		status = &val
-	}
-	var tenantID *string
-	if t.TenantID != "" {
-		val := t.TenantID
-		tenantID = &val
-	}
-
 	req := TeamRequest{
 		Name:     &t.Name,
-		Status:   status,
-		TenantID: tenantID,
+		Status:   t.Status,
+		TenantID: t.TenantID,
 	}
 
 	val, err := ExecQueryOne[domain.Team](ctx, r.pool, queryTeamCreate, req)
@@ -55,16 +44,10 @@ func (r *TeamRepo) GetByID(ctx context.Context, id string) (*domain.Team, error)
 }
 
 func (r *TeamRepo) Update(ctx context.Context, t *domain.Team) error {
-	var status *string
-	if t.Status != "" {
-		val := t.Status
-		status = &val
-	}
-
 	req := TeamRequest{
 		ID:     &t.ID,
 		Name:   &t.Name,
-		Status: status,
+		Status: t.Status,
 		// TenantID not updatable usually or passed if needed
 	}
 	val, err := ExecQueryOne[domain.Team](ctx, r.pool, queryTeamUpdate, req)

@@ -6,7 +6,6 @@ import (
 	"github.com/fayzzzm/go-project/internal/domain"
 )
 
-// DeviceServicer is defined by the consumer (UseCase).
 type DeviceServicer interface {
 	Create(ctx context.Context, d *domain.Device) error
 	GetByID(ctx context.Context, id string) (*domain.Device, error)
@@ -53,14 +52,28 @@ func NewDeviceUseCase(svc DeviceServicer) *DeviceUseCase {
 }
 
 func (uc *DeviceUseCase) Create(ctx context.Context, input CreateDeviceInput) (*DeviceOutput, error) {
+	var profileID, cabinetID, teamID *string
+	if input.DeviceProfileID != "" {
+		val := input.DeviceProfileID
+		profileID = &val
+	}
+	if input.CabinetID != "" {
+		val := input.CabinetID
+		cabinetID = &val
+	}
+	if input.TeamID != "" {
+		val := input.TeamID
+		teamID = &val
+	}
+
 	device := &domain.Device{
 		Name:            input.Name,
 		Description:     input.Description,
 		SerialNumber:    input.SerialNumber,
 		EPC:             input.EPC,
-		DeviceProfileID: input.DeviceProfileID,
-		CabinetID:       input.CabinetID,
-		TeamID:          input.TeamID,
+		DeviceProfileID: profileID,
+		CabinetID:       cabinetID,
+		TeamID:          teamID,
 		TenantID:        input.TenantID,
 	}
 

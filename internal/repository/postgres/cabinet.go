@@ -24,21 +24,14 @@ const (
 )
 
 func (r *CabinetRepo) Create(ctx context.Context, c *domain.Cabinet) error {
-	// Status is string in domain, *string in Request.
-	var status *string
-	if c.Status != "" {
-		val := c.Status
-		status = &val
-	}
-
 	req := CabinetRequest{
 		Name:        &c.Name,
-		Description: c.Description, // Already *string
-		Location:    c.Location,    // Already *string
-		MachineID:   c.MachineID,   // Already *string
-		Status:      status,
-		TeamID:      c.TeamID,   // Already *string
-		TenantID:    c.TenantID, // Already *string
+		Description: c.Description,
+		Location:    c.Location,
+		MachineID:   c.MachineID,
+		Status:      c.Status,
+		TeamID:      c.TeamID,
+		TenantID:    c.TenantID,
 	}
 	val, err := ExecQueryOne[domain.Cabinet](ctx, r.pool, queryCabinetCreate, req)
 	if err != nil {
@@ -54,20 +47,13 @@ func (r *CabinetRepo) GetByID(ctx context.Context, id string) (*domain.Cabinet, 
 }
 
 func (r *CabinetRepo) Update(ctx context.Context, c *domain.Cabinet) error {
-	// Status is string in domain, *string in Request.
-	var status *string
-	if c.Status != "" {
-		val := c.Status
-		status = &val
-	}
-
 	req := CabinetRequest{
 		ID:          &c.ID,
 		Name:        &c.Name,
-		Description: c.Description, // Already *string
-		Location:    c.Location,    // Already *string
-		MachineID:   c.MachineID,   // Already *string
-		Status:      status,
+		Description: c.Description,
+		Location:    c.Location,
+		MachineID:   c.MachineID,
+		Status:      c.Status,
 		TeamID:      c.TeamID,
 	}
 	val, err := ExecQueryOne[domain.Cabinet](ctx, r.pool, queryCabinetUpdate, req)

@@ -6,7 +6,6 @@ import (
 	"github.com/fayzzzm/go-project/internal/domain"
 )
 
-// DeviceProfileRepository defined locally by consumer
 type DeviceProfileRepository interface {
 	Create(ctx context.Context, dp *domain.DeviceProfile) error
 	GetByID(ctx context.Context, id string) (*domain.DeviceProfile, error)

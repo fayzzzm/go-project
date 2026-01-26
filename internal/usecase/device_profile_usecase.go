@@ -44,10 +44,20 @@ func NewDeviceProfileUseCase(svc DeviceProfileServicer) *DeviceProfileUseCase {
 }
 
 func (uc *DeviceProfileUseCase) Create(ctx context.Context, input CreateDeviceProfileInput) (*DeviceProfileOutput, error) {
+	var desc *string
+	if input.Description != "" {
+		val := input.Description
+		desc = &val
+	}
+	var tenantID *string
+	if input.TenantID != "" {
+		val := input.TenantID
+		tenantID = &val
+	}
 	dp := &domain.DeviceProfile{
 		Name:        input.Name,
-		Description: input.Description,
-		TenantID:    input.TenantID,
+		Description: desc,
+		TenantID:    tenantID,
 	}
 
 	if err := uc.svc.Create(ctx, dp); err != nil {
@@ -86,7 +96,8 @@ func (uc *DeviceProfileUseCase) Update(ctx context.Context, id string, input Upd
 		dp.Name = input.Name
 	}
 	if input.Description != "" {
-		dp.Description = input.Description
+		val := input.Description
+		dp.Description = &val
 	}
 
 	if err := uc.svc.Update(ctx, dp); err != nil {
@@ -100,11 +111,19 @@ func (uc *DeviceProfileUseCase) Delete(ctx context.Context, id string) error {
 }
 
 func toDeviceProfileOutput(dp *domain.DeviceProfile) *DeviceProfileOutput {
+	desc := ""
+	if dp.Description != nil {
+		desc = *dp.Description
+	}
+	tenantID := ""
+	if dp.TenantID != nil {
+		tenantID = *dp.TenantID
+	}
 	return &DeviceProfileOutput{
 		ID:          dp.ID,
 		Name:        dp.Name,
-		Description: dp.Description,
-		TenantID:    dp.TenantID,
+		Description: desc,
+		TenantID:    tenantID,
 		CreatedAt:   dp.CreatedAt,
 		UpdatedAt:   dp.UpdatedAt,
 	}
