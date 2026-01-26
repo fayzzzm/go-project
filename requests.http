@@ -1,0 +1,169 @@
+@baseUrl = http://localhost:8080/api/v1
+@tenantId = tenant_001
+@createdUserId = 9f489534-3efb-44b6-a817-2e5f29000018
+@createdDeviceId = {{createDevice.response.body.id}}
+@createdCabinetId = ca6289ef-0f98-49a5-95dc-0ff71a8304af
+@createdTeamId = 732b49a9-a5de-49ae-93df-ba3ec8644bba
+@createdProfileId = ff46849a-e995-4a25-b68a-56edae8bee9d
+
+
+### ============================================================================
+### USERS
+### ============================================================================
+
+### 1. Create User
+# @name createUser
+POST {{baseUrl}}/users
+Content-Type: application/json
+X-Tenant-ID: {{tenantId}}
+
+{
+    "email": "developer@itsware.com",
+    "name": "10x Developer",
+    "address": "Silicon Valley",
+    "phone": "+1-555-0199",
+    "app_metadata": {
+        "role": "admin",
+        "permissions": ["all"]
+    },
+    "user_metadata": {
+        "theme": "dark"
+    }
+}
+
+### 2. Get User By ID
+GET {{baseUrl}}/users/{{createdUserId}}
+Content-Type: application/json
+X-Tenant-ID: {{tenantId}}
+
+### 3. List Users
+GET {{baseUrl}}/users
+Content-Type: application/json
+X-Tenant-ID: {{tenantId}}
+
+### 4. Update User
+PUT {{baseUrl}}/users/{{createdUserId}}
+Content-Type: application/json
+X-Tenant-ID: {{tenantId}}
+
+{
+    "name": "100x Developer"
+}
+
+### 5. Delete User 
+DELETE {{baseUrl}}/users/{{createdUserId}}
+Content-Type: application/json
+X-Tenant-ID: {{tenantId}}
+
+
+
+### ============================================================================
+### DEVICE PROFILES
+### ============================================================================
+
+### 6. Create Device Profile
+# @name createProfile
+POST {{baseUrl}}/device_profiles
+Content-Type: application/json
+X-Tenant-ID: {{tenantId}}
+
+{
+    "name": "Handheld RFID Reader",
+    "description": "Zebra MC3300 Models"
+}
+
+### 7. List Device Profiles
+GET {{baseUrl}}/device_profiles
+Content-Type: application/json
+X-Tenant-ID: {{tenantId}}
+
+
+### ============================================================================
+### TEAMS
+### ============================================================================
+
+### 8. Create Team
+# @name createTeam
+POST {{baseUrl}}/teams
+Content-Type: application/json
+X-Tenant-ID: {{tenantId}}
+
+{
+    "name": "Warehouse Ops",
+    "status": "active"
+}
+
+### 9. List Teams
+GET {{baseUrl}}/teams
+Content-Type: application/json
+X-Tenant-ID: {{tenantId}}
+
+
+### ============================================================================
+### CABINETS
+### ============================================================================
+
+### 10. Create Cabinet
+# @name createCabinet
+POST {{baseUrl}}/cabinets
+Content-Type: application/json
+X-Tenant-ID: {{tenantId}}
+
+{
+    "name": "Main Server Rack",
+    "location": "Building A, Floor 2",
+    "team_id": "{{createdTeamId}}"
+}
+
+### 11. List Cabinets
+GET {{baseUrl}}/cabinets
+Content-Type: application/json
+X-Tenant-ID: {{tenantId}}
+
+
+### ============================================================================
+### DEVICES
+### ============================================================================
+
+### 12. Create Device
+# @name createDevice
+POST {{baseUrl}}/devices
+Content-Type: application/json
+X-Tenant-ID: {{tenantId}}
+
+{
+    "name": "RFID Reader X1",
+    "description": "Main entrance reader",
+    "serial_number": "SN-2026-004",
+    "epc": "EPC:3039",
+    "device_profile_id": "{{createdProfileId}}",
+    "cabinet_id": "{{createdCabinetId}}",
+    "team_id": "{{createdTeamId}}",
+    "tenant_id": "{{tenantId}}"
+}
+
+### 13. List Devices
+GET {{baseUrl}}/devices
+Content-Type: application/json
+X-Tenant-ID: {{tenantId}}
+
+
+### 14. Get Device By ID
+GET {{baseUrl}}/devices/{{createdDeviceId}}
+Content-Type: application/json
+X-Tenant-ID: {{tenantId}}
+
+### 15. Update Device
+PUT {{baseUrl}}/devices/{{createdDeviceId}}
+Content-Type: application/json
+X-Tenant-ID: {{tenantId}}
+
+{
+    "name": "RFID Reader X1 (Updated)",
+    "description": "Updated description"
+}
+
+### 16. Delete Device
+DELETE {{baseUrl}}/devices/{{createdDeviceId}}
+Content-Type: application/json
+X-Tenant-ID: {{tenantId}}

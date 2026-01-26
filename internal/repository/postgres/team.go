@@ -1,0 +1,91 @@
+package postgres
+
+import (
+	"context"
+
+	"github.com/fayzzzm/go-project/internal/domain"
+	"github.com/jackc/pgx/v5/pgxpool"
+)
+
+type TeamRepo struct {
+	pool *pgxpool.Pool
+}
+
+func NewTeamRepo(pool *pgxpool.Pool) *TeamRepo {
+	return &TeamRepo{pool: pool}
+}
+
+const (
+	queryTeamCreate  = "SELECT * FROM teams.create($1::teams.team_request)"
+	queryTeamGetByID = "SELECT * FROM teams.get_by_id($1::teams.team_request)"
+	queryTeamList    = "SELECT * FROM teams.list($1::teams.team_request)"
+	queryTeamUpdate  = "SELECT * FROM teams.update($1::teams.team_request)"
+	queryTeamDelete  = "SELECT * FROM teams.delete($1::teams.team_request)"
+)
+
+func (r *TeamRepo) Create(ctx context.Context, t *domain.Team) error {
+	var status *string
+	if t.Status != "" {
+		val := t.Status
+		status = &val
+	}
+	var tenantID *string
+	if t.TenantID != "" {
+		val := t.TenantID
+		tenantID = &val
+	}
+
+	req := TeamRequest{
+		Name:     &t.Name,
+		Status:   status,
+		TenantID: tenantID,
+	}
+
+	val, err := ExecQueryOne[domain.Team](ctx, r.pool, queryTeamCreate, req)
+	if err != nil {
+		return err
+	}
+	*t = *val
+	return nil
+}
+
+func (r *TeamRepo) GetByID(ctx context.Context, id string) (*domain.Team, error) {
+	req := TeamRequest{ID: &id}
+	return ExecQueryOne[domain.Team](ctx, r.pool, queryTeamGetByID, req)
+}
+
+func (r *TeamRepo) Update(ctx context.Context, t *domain.Team) error {
+	var status *string
+	if t.Status != "" {
+		val := t.Status
+		status = &val
+	}
+
+	req := TeamRequest{
+		ID:     &t.ID,
+		Name:   &t.Name,
+		Status: status,
+		// TenantID not updatable usually or passed if needed
+	}
+	val, err := ExecQueryOne[domain.Team](ctx, r.pool, queryTeamUpdate, req)
+	if err != nil {
+		return err
+	}
+	*t = *val
+	return nil
+}
+
+func (r *TeamRepo) Delete(ctx context.Context, id string) error {
+	req := TeamRequest{ID: &id}
+	_, err := r.pool.Exec(ctx, queryTeamDelete, req)
+	return err
+}
+
+func (r *TeamRepo) List(ctx context.Context, limit, offset int, tenantID string) ([]domain.Team, error) {
+	var tID *string
+	if tenantID != "" {
+		tID = &tenantID
+	}
+	req := TeamRequest{LimitVal: &limit, OffsetVal: &offset, TenantID: tID}
+	return ExecQueryList[domain.Team](ctx, r.pool, queryTeamList, req)
+}
