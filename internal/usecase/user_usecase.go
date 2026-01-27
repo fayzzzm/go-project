@@ -4,14 +4,16 @@ import (
 	"context"
 
 	"github.com/fayzzzm/go-project/internal/domain"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type UserServicer interface {
 	Create(ctx context.Context, u *domain.User) error
 	GetByID(ctx context.Context, id string) (*domain.User, error)
-	List(ctx context.Context, limit, offset int) ([]domain.User, error)
+	List(ctx context.Context, limit, offset int, teamID, tenantID string) ([]domain.User, error)
 	Update(ctx context.Context, u *domain.User) error
 	Delete(ctx context.Context, id string) error
+	GetForLogin(ctx context.Context, email string) (*domain.User, error)
 }
 
 type CreateUserInput struct {
@@ -19,8 +21,10 @@ type CreateUserInput struct {
 	Name         string                 `json:"name" binding:"required"`
 	Address      string                 `json:"address"`
 	Phone        string                 `json:"phone"`
+	Password     string                 `json:"password" binding:"required,min=6"`
 	AppMetadata  map[string]interface{} `json:"app_metadata"`
 	UserMetadata map[string]interface{} `json:"user_metadata"`
+	TenantID     string                 `json:"tenant_id"`
 }
 
 type UpdateUserInput struct {
@@ -33,10 +37,12 @@ type UpdateUserInput struct {
 }
 
 type UserOutput struct {
-	ID      string `json:"id"`
-	Email   string `json:"email"`
-	Name    string `json:"name"`
-	Address string `json:"address"`
+	ID       string `json:"id"`
+	Email    string `json:"email"`
+	Name     string `json:"name"`
+	Address  string `json:"address"`
+	Role     string `json:"role"`
+	TenantID string `json:"tenant_id"`
 }
 
 type UserUseCase struct {
@@ -44,17 +50,27 @@ type UserUseCase struct {
 }
 
 func NewUserUseCase(svc UserServicer) *UserUseCase {
-	return &UserUseCase{svc: svc}
+	return &UserUseCase{
+		svc: svc,
+	}
 }
 
 func (uc *UserUseCase) Create(ctx context.Context, input CreateUserInput) (*UserOutput, error) {
+	// Hash Password
+	hashedBytes, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
+	if err != nil {
+		return nil, err
+	}
+
 	user := &domain.User{
 		Email:        input.Email,
 		Name:         &input.Name,
 		Address:      &input.Address,
 		Phone:        &input.Phone,
+		Password:     string(hashedBytes),
 		AppMetadata:  input.AppMetadata,
 		UserMetadata: input.UserMetadata,
+		TenantID:     input.TenantID,
 	}
 
 	if err := uc.svc.Create(ctx, user); err != nil {
@@ -72,7 +88,7 @@ func (uc *UserUseCase) GetByID(ctx context.Context, id string) (*UserOutput, err
 	return toUserOutput(user), nil
 }
 
-func (uc *UserUseCase) List(ctx context.Context, limit, offset int) ([]UserOutput, error) {
+func (uc *UserUseCase) List(ctx context.Context, limit, offset int, teamID, tenantID string) ([]UserOutput, error) {
 	if limit <= 0 {
 		limit = 100
 	}
@@ -82,7 +98,7 @@ func (uc *UserUseCase) List(ctx context.Context, limit, offset int) ([]UserOutpu
 	if offset < 0 {
 		offset = 0
 	}
-	users, err := uc.svc.List(ctx, limit, offset)
+	users, err := uc.svc.List(ctx, limit, offset, teamID, tenantID)
 	if err != nil {
 		return nil, err
 	}
@@ -133,10 +149,12 @@ func toUserOutput(u *domain.User) *UserOutput {
 		address = *u.Address
 	}
 	return &UserOutput{
-		ID:      u.ID,
-		Email:   u.Email,
-		Name:    name,
-		Address: address,
+		ID:       u.ID,
+		Email:    u.Email,
+		Name:     name,
+		Address:  address,
+		Role:     u.Role,
+		TenantID: u.TenantID,
 	}
 }
 

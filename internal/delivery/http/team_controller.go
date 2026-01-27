@@ -13,9 +13,10 @@ import (
 type TeamUseCase interface {
 	Create(ctx context.Context, input usecase.CreateTeamInput) (*usecase.TeamOutput, error)
 	GetByID(ctx context.Context, id string) (*usecase.TeamOutput, error)
-	List(ctx context.Context, limit, offset int, tenantID string) ([]usecase.TeamOutput, error)
+	List(ctx context.Context, limit, offset int, tenantID, userID string) ([]usecase.TeamOutput, error)
 	Update(ctx context.Context, id string, input usecase.UpdateTeamInput) (*usecase.TeamOutput, error)
 	Delete(ctx context.Context, id string) error
+	AddMember(ctx context.Context, teamID string, input usecase.AddMemberInput) (*usecase.MemberOutput, error)
 }
 
 type TeamController struct {
@@ -26,12 +27,14 @@ func NewTeamController(r gin.IRouter, uc TeamUseCase) {
 	c := &TeamController{uc: uc}
 
 	teams := r.Group("/teams")
+	teams.Use(middleware.AuthMiddleware())
 	{
 		teams.POST("", middleware.BindJSON[usecase.CreateTeamInput](), utils.Handle(c.Create, http.StatusCreated))
 		teams.GET("", utils.Handle(c.List, http.StatusOK))
 		teams.GET("/:id", utils.Handle(c.GetByID, http.StatusOK))
 		teams.PUT("/:id", middleware.BindJSON[usecase.UpdateTeamInput](), utils.Handle(c.Update, http.StatusOK))
 		teams.DELETE("/:id", utils.Handle(c.Delete, http.StatusNoContent))
+		teams.POST("/:id/members", middleware.BindJSON[usecase.AddMemberInput](), utils.Handle(c.AddMember, http.StatusOK))
 	}
 }
 
@@ -47,9 +50,10 @@ func (c *TeamController) GetByID(ctx *gin.Context) (any, error) {
 
 func (c *TeamController) List(ctx *gin.Context) (any, error) {
 	limit, offset := middleware.GetPagination(ctx)
-	tenantID := ctx.GetHeader("X-Tenant-ID")
+	tenantID := middleware.GetTenantID(ctx)
+	userID, _ := middleware.GetUserID(ctx)
 
-	return c.uc.List(ctx.Request.Context(), limit, offset, tenantID)
+	return c.uc.List(ctx.Request.Context(), limit, offset, tenantID, userID)
 }
 
 func (c *TeamController) Update(ctx *gin.Context) (any, error) {
@@ -62,4 +66,10 @@ func (c *TeamController) Delete(ctx *gin.Context) (any, error) {
 	id := ctx.Param("id")
 	err := c.uc.Delete(ctx.Request.Context(), id)
 	return nil, err
+}
+
+func (c *TeamController) AddMember(ctx *gin.Context) (any, error) {
+	id := ctx.Param("id")
+	input := middleware.GetBody[usecase.AddMemberInput](ctx)
+	return c.uc.AddMember(ctx.Request.Context(), id, input)
 }

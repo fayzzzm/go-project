@@ -16,12 +16,13 @@ func NewUserRepo(pool *pgxpool.Pool) *UserRepo {
 }
 
 const (
-	queryUserCreate     = "SELECT * FROM users.create($1::users.user_request)"
-	queryUserGetByID    = "SELECT * FROM users.get_by_id($1::users.user_request)"
-	queryUserList       = "SELECT * FROM users.list($1::users.user_request)"
-	queryUserUpdate     = "SELECT * FROM users.update($1::users.user_request)"
-	queryUserDelete     = "SELECT * FROM users.delete($1::users.user_request)"
-	queryUserGetByEmail = "SELECT * FROM users.get_by_email($1::users.user_request)"
+	queryUserCreate      = "SELECT * FROM users.create($1::users.user_request)"
+	queryUserGetByID     = "SELECT * FROM users.get_by_id($1::users.user_request)"
+	queryUserList        = "SELECT * FROM users.list($1::users.user_request)"
+	queryUserUpdate      = "SELECT * FROM users.update($1::users.user_request)"
+	queryUserDelete      = "SELECT * FROM users.delete($1::users.user_request)"
+	queryUserGetByEmail  = "SELECT * FROM users.get_by_email($1::users.user_request)"
+	queryUserGetForLogin = "SELECT * FROM users.get_for_login($1::text)"
 )
 
 func (r *UserRepo) Create(ctx context.Context, u *domain.User) error {
@@ -33,6 +34,8 @@ func (r *UserRepo) Create(ctx context.Context, u *domain.User) error {
 		Role:         &u.Role,
 		AppMetadata:  u.AppMetadata,
 		UserMetadata: u.UserMetadata,
+		Password:     &u.Password,
+		TenantID:     &u.TenantID,
 	}
 
 	val, err := ExecQueryOne[domain.User](ctx, r.pool, queryUserCreate, req)
@@ -89,12 +92,26 @@ func (r *UserRepo) Delete(ctx context.Context, id string) error {
 	return err
 }
 
-func (r *UserRepo) List(ctx context.Context, limit, offset int) ([]domain.User, error) {
-	req := UserRequest{LimitVal: &limit, OffsetVal: &offset}
+func (r *UserRepo) List(ctx context.Context, limit, offset int, teamID, tenantID string) ([]domain.User, error) {
+	var teID, tnID *string
+	if teamID != "" {
+		teID = &teamID
+	}
+	if tenantID != "" {
+		tnID = &tenantID
+	}
+	req := UserRequest{LimitVal: &limit, OffsetVal: &offset, TeamID: teID, TenantID: tnID}
 	return ExecQueryList[domain.User](ctx, r.pool, queryUserList, req)
 }
 
 func (r *UserRepo) GetByEmail(ctx context.Context, email string) (*domain.User, error) {
 	req := UserRequest{Email: &email}
 	return ExecQueryOne[domain.User](ctx, r.pool, queryUserGetByEmail, req)
+}
+
+func (r *UserRepo) GetForLogin(ctx context.Context, email string) (*domain.User, error) {
+	// The function users.get_for_login($1) takes raw text, not user_request
+	// But we wait, I defined it as p_email TEXT.
+	// And the SQL call query defined above uses $1::text.
+	return ExecQueryOne[domain.User](ctx, r.pool, queryUserGetForLogin, email)
 }

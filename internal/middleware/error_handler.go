@@ -36,9 +36,11 @@ func ErrorHandlerMiddleware() gin.HandlerFunc {
 				statusCode = http.StatusUnauthorized
 				message = err.Error()
 			default:
+				// Log the actual error for debugging
+				// TODO: Use a proper logger
+				println("Internal Server Error:", err.Error())
 				statusCode = http.StatusInternalServerError
 				message = "internal server error"
-				// In production, log the real error here but keep the response generic
 			}
 
 			// If status is already written, we can't do anything (rare)

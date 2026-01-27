@@ -29,13 +29,13 @@ const (
 func (r *DeviceRepo) Create(ctx context.Context, d *domain.Device) error {
 	req := DeviceRequest{
 		Name:            &d.Name,
-		Description:     &d.Description,
+		Description:     d.Description,
 		SerialNumber:    &d.SerialNumber,
-		EPC:             &d.EPC,
+		EPC:             d.EPC,
 		DeviceProfileID: d.DeviceProfileID,
 		CabinetID:       d.CabinetID,
 		TeamID:          d.TeamID,
-		TenantID:        &d.TenantID,
+		TenantID:        d.TenantID,
 	}
 	val, err := ExecQueryOne[domain.Device](ctx, r.pool, queryDeviceCreate, req)
 	if err != nil {
@@ -54,13 +54,13 @@ func (r *DeviceRepo) Update(ctx context.Context, d *domain.Device) error {
 	req := DeviceRequest{
 		ID:              &d.ID,
 		Name:            &d.Name,
-		Description:     &d.Description,
+		Description:     d.Description,
 		SerialNumber:    &d.SerialNumber,
-		EPC:             &d.EPC,
+		EPC:             d.EPC,
 		DeviceProfileID: d.DeviceProfileID,
 		CabinetID:       d.CabinetID,
 		TeamID:          d.TeamID,
-		TenantID:        &d.TenantID,
+		TenantID:        d.TenantID,
 	}
 	val, err := ExecQueryOne[domain.Device](ctx, r.pool, queryDeviceUpdate, req)
 	if err != nil {
@@ -96,9 +96,9 @@ func (r *DeviceRepo) BulkCreate(ctx context.Context, devices []domain.Device) er
 	for i, d := range devices {
 		requests[i] = DeviceRequest{
 			Name:            &d.Name,
-			Description:     &d.Description,
+			Description:     d.Description,
 			SerialNumber:    &d.SerialNumber,
-			EPC:             &d.EPC,
+			EPC:             d.EPC,
 			DeviceProfileID: d.DeviceProfileID,
 			CabinetID:       d.CabinetID,
 			TeamID:          d.TeamID,

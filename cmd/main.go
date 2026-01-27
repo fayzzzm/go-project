@@ -48,6 +48,10 @@ func main() {
 				postgres.NewDeviceProfileRepo,
 				fx.As(new(service.DeviceProfileRepository)),
 			),
+			fx.Annotate(
+				postgres.NewTenantRepo,
+				fx.As(new(service.TenantRepository)),
+			),
 
 			// 2. Services -> UseCase Interfaces (Consumer defined)
 			fx.Annotate(
@@ -70,6 +74,10 @@ func main() {
 				service.NewDeviceProfileService,
 				fx.As(new(usecase.DeviceProfileServicer)),
 			),
+			fx.Annotate(
+				service.NewTenantService,
+				fx.As(new(usecase.TenantServicer)),
+			),
 
 			// 3. UseCases -> Delivery Interfaces (Consumer defined)
 			fx.Annotate(
@@ -79,6 +87,10 @@ func main() {
 			fx.Annotate(
 				usecase.NewUserUseCase,
 				fx.As(new(delivery.UserUseCase)),
+			),
+			fx.Annotate(
+				usecase.NewAuthUseCase,
+				fx.As(new(delivery.AuthUseCase)),
 			),
 			fx.Annotate(
 				usecase.NewCabinetUseCase,
@@ -92,14 +104,20 @@ func main() {
 				usecase.NewDeviceProfileUseCase,
 				fx.As(new(delivery.DeviceProfileUseCase)),
 			),
+			fx.Annotate(
+				usecase.NewTenantUseCase,
+				fx.As(new(delivery.TenantUseCase)),
+			),
 		),
 		fx.Invoke(
 			// 4. Controllers
 			delivery.NewDeviceController,
 			delivery.NewUserController,
+			delivery.NewAuthController,
 			delivery.NewCabinetController,
 			delivery.NewTeamController,
 			delivery.NewDeviceProfileController,
+			delivery.NewTenantController,
 
 			StartServer,
 		),
@@ -124,6 +142,7 @@ func NewDatabasePool(lc fx.Lifecycle) (*pgxpool.Pool, error) {
 			"cabinets.cabinet_request",
 			"teams.team_request",
 			"device_profiles.device_profile_request",
+			"teams.member_request",
 		}
 		for _, t := range types {
 			dt, err := conn.LoadType(ctx, t)
@@ -139,6 +158,7 @@ func NewDatabasePool(lc fx.Lifecycle) (*pgxpool.Pool, error) {
 		conn.TypeMap().RegisterDefaultPgType(postgres.CabinetRequest{}, "cabinets.cabinet_request")
 		conn.TypeMap().RegisterDefaultPgType(postgres.TeamRequest{}, "teams.team_request")
 		conn.TypeMap().RegisterDefaultPgType(postgres.DeviceProfileRequest{}, "device_profiles.device_profile_request")
+		conn.TypeMap().RegisterDefaultPgType(postgres.MemberRequest{}, "teams.member_request")
 
 		return nil
 	}

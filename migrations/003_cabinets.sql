@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS cabinets.cabinet (
     machine_id TEXT,
     status TEXT DEFAULT 'available',
     team_id UUID REFERENCES teams.team(id),
-    tenant_id TEXT,
+    tenant_id UUID REFERENCES tenants.tenant(id),
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),
     created_by TEXT DEFAULT '',
@@ -35,9 +35,10 @@ CREATE TYPE cabinets.cabinet_request AS (
     machine_id    TEXT,
     status        TEXT,
     team_id       UUID,
-    tenant_id     TEXT,
+    tenant_id     UUID,
     limit_val     INTEGER,
-    offset_val    INTEGER
+    offset_val    INTEGER,
+    user_id       UUID
 );
 
 CREATE TYPE cabinets.cabinet_response AS (
@@ -48,7 +49,7 @@ CREATE TYPE cabinets.cabinet_response AS (
     machine_id  TEXT,
     status      TEXT,
     team_id     UUID,
-    tenant_id   TEXT,
+    tenant_id   UUID,
     created_at  TIMESTAMPTZ,
     created_by  TEXT,
     updated_at  TIMESTAMPTZ,
@@ -61,6 +62,17 @@ RETURNS SETOF cabinets.cabinet_response AS $$
 DECLARE
     v_id UUID;
 BEGIN
+    -- Check Membership
+    IF r.team_id IS NOT NULL THEN
+        IF r.user_id IS NULL THEN
+            RAISE EXCEPTION 'User ID is required when creating a cabinet for a team';
+        END IF;
+        
+        IF NOT EXISTS (SELECT 1 FROM teams.members WHERE team_id = r.team_id AND user_id = r.user_id) THEN
+             RAISE EXCEPTION 'User % is not a member of team %', r.user_id, r.team_id USING ERRCODE = 'P0001';
+        END IF;
+    END IF;
+
     INSERT INTO cabinets.cabinet (
         name, description, location, machine_id, team_id, tenant_id
     )

@@ -1,24 +1,51 @@
 @baseUrl = http://localhost:8080/api/v1
-@tenantId = tenant_001
-@createdUserId = eb068dc9-0193-44db-90f3-59bfb6d1a872
-@createdDeviceId = {{createDevice.response.body.id}}
-@createdCabinetId = ca6289ef-0f98-49a5-95dc-0ff71a8304af
-@createdTeamId = f400d061-65c2-475b-a4be-680dd754910e
-@createdProfileId = 8d9f13e3-dbab-48d3-b463-c2e87a2f941f
+@tenantId = {{paste_tenant_id}}
+@createdUserId = {{paste_user_id}}
+@createdDeviceId = {{paste_device_id}}
+@createdCabinetId = {{paste_cabinet_id}}
+@createdTeamId = {{paste_team_id}}
+@createdProfileId = {{paste_profile_id}}
+
+@password = secret_Pass123!
+@authToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImRldmVsb3BlcjFAaXRzd2FyZS5jb20iLCJleHAiOjE3Njk2MjYzMDksInJvbGUiOiIiLCJzdWIiOiIyZTU0MDNlYi1hMzRhLTQyZDItODU1Zi1mNjQxMzliMjE0YmIiLCJ0ZW5hbnRfaWQiOiJhMGVlYmM5OS05YzBiLTRlZjgtYmI2ZC02YmI5YmQzODBhMTEifQ.v8TcsxJwEq-1dJf8Yfwl1htoDrxAxqzpGQDZa2gOUCI
+
+### ============================================================================
+### TENANTS
+### ============================================================================
+
+### 1a. List Tenants
+# @name listTenants
+GET {{baseUrl}}/tenants
+Content-Type: application/json
+
+### ============================================================================
+### AUTHENTICATION
+### ============================================================================
+
+### 1b. Login
+# @name login
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+    "email": "developer1@itsware.com",
+    "password": "{{password}}"
+}
 
 
 ### ============================================================================
 ### USERS
 ### ============================================================================
 
-### 1. Create User
+### 2. Create User
 # @name createUser
 POST {{baseUrl}}/users
 Content-Type: application/json
 X-Tenant-ID: {{tenantId}}
 
 {
-    "email": "developer@itsware.com",
+    "email": "developer1@itsware.com",
+    "password": "{{password}}",
     "name": "10x Developer",
     "address": "Silicon Valley",
     "phone": "+1-555-0199",
@@ -31,50 +58,32 @@ X-Tenant-ID: {{tenantId}}
     }
 }
 
-### 2. Get User By ID
+### 3. Get User By ID
 GET {{baseUrl}}/users/{{createdUserId}}
 Content-Type: application/json
+Authorization: Bearer {{authToken}}
 X-Tenant-ID: {{tenantId}}
 
-### 3. List Users
+### 4. List Users
 GET {{baseUrl}}/users
 Content-Type: application/json
+Authorization: Bearer {{authToken}}
 X-Tenant-ID: {{tenantId}}
 
-### 4. Update User
+### 5. Update User
 PUT {{baseUrl}}/users/{{createdUserId}}
 Content-Type: application/json
+Authorization: Bearer {{authToken}}
 X-Tenant-ID: {{tenantId}}
 
 {
-    "name": "100x Developer"
+    "name": "Lalante Developer"
 }
 
-### 5. Delete User 
+### 6. Delete User 
 DELETE {{baseUrl}}/users/{{createdUserId}}
 Content-Type: application/json
-X-Tenant-ID: {{tenantId}}
-
-
-
-### ============================================================================
-### DEVICE PROFILES
-### ============================================================================
-
-### 6. Create Device Profile
-# @name createProfile
-POST {{baseUrl}}/device_profiles
-Content-Type: application/json
-X-Tenant-ID: {{tenantId}}
-
-{
-    "name": "Handheld RFID Reader",
-    "description": "Zebra MC3300 Models"
-}
-
-### 7. List Device Profiles
-GET {{baseUrl}}/device_profiles
-Content-Type: application/json
+Authorization: Bearer {{authToken}}
 X-Tenant-ID: {{tenantId}}
 
 
@@ -82,20 +91,40 @@ X-Tenant-ID: {{tenantId}}
 ### TEAMS
 ### ============================================================================
 
-### 8. Create Team
+### 7. Create Team
 # @name createTeam
 POST {{baseUrl}}/teams
 Content-Type: application/json
+Authorization: Bearer {{authToken}}
 X-Tenant-ID: {{tenantId}}
 
 {
-    "name": "Warehouse Ops",
+    "name": "Warehouse Ops Team",
     "status": "active"
 }
 
-### 9. List Teams
+### 8. List Teams
 GET {{baseUrl}}/teams
 Content-Type: application/json
+Authorization: Bearer {{authToken}}
+X-Tenant-ID: {{tenantId}}
+
+### 9. Add Member to Team
+# @name addMember
+POST {{baseUrl}}/teams/{{createdTeamId}}/members
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+X-Tenant-ID: {{tenantId}}
+
+{
+    "user_id": "{{createdUserId}}",
+    "role": "admin"
+}
+
+### 10. List Users by Team
+GET {{baseUrl}}/users?team_id={{createdTeamId}}
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
 X-Tenant-ID: {{tenantId}}
 
 
@@ -103,10 +132,11 @@ X-Tenant-ID: {{tenantId}}
 ### CABINETS
 ### ============================================================================
 
-### 10. Create Cabinet
+### 11. Create Cabinet
 # @name createCabinet
 POST {{baseUrl}}/cabinets
 Content-Type: application/json
+Authorization: Bearer {{authToken}}
 X-Tenant-ID: {{tenantId}}
 
 {
@@ -115,9 +145,33 @@ X-Tenant-ID: {{tenantId}}
     "team_id": "{{createdTeamId}}"
 }
 
-### 11. List Cabinets
+### 12. List Cabinets
 GET {{baseUrl}}/cabinets
 Content-Type: application/json
+X-Tenant-ID: {{tenantId}}
+Authorization: Bearer {{authToken}}
+
+
+### ============================================================================
+### DEVICE PROFILES
+### ============================================================================
+
+### 13. Create Device Profile
+# @name createProfile
+POST {{baseUrl}}/device_profiles
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+X-Tenant-ID: {{tenantId}}
+
+{
+    "name": "Handheld RFID Reader",
+    "description": "Zebra MC3300 Models"
+}
+
+### 14. List Device Profiles
+GET {{baseUrl}}/device_profiles
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
 X-Tenant-ID: {{tenantId}}
 
 
@@ -125,16 +179,17 @@ X-Tenant-ID: {{tenantId}}
 ### DEVICES
 ### ============================================================================
 
-### 12. Create Device
+### 15. Create Device
 # @name createDevice
 POST {{baseUrl}}/devices
 Content-Type: application/json
+Authorization: Bearer {{authToken}}
 X-Tenant-ID: {{tenantId}}
 
 {
-    "name": "RFID Reader X1",
+    "name": "RFID Reader X12",
     "description": "Main entrance reader",
-    "serial_number": "SN-2026-004",
+    "serial_number": "SN-2026-005",
     "epc": "EPC:3039",
     "device_profile_id": "{{createdProfileId}}",
     "cabinet_id": "{{createdCabinetId}}",
@@ -142,28 +197,33 @@ X-Tenant-ID: {{tenantId}}
     "tenant_id": "{{tenantId}}"
 }
 
-### 13. List Devices
+### 16. List Devices
 GET {{baseUrl}}/devices
 Content-Type: application/json
+Authorization: Bearer {{authToken}}
 X-Tenant-ID: {{tenantId}}
 
 
-### 14. Get Device By ID
+### 17. Get Device By ID
 GET {{baseUrl}}/devices/{{createdDeviceId}}
 Content-Type: application/json
+Authorization: Bearer {{authToken}}
 X-Tenant-ID: {{tenantId}}
 
-### 15. Update Device
+### 18. Update Device
 PUT {{baseUrl}}/devices/{{createdDeviceId}}
 Content-Type: application/json
+Authorization: Bearer {{authToken}}
 X-Tenant-ID: {{tenantId}}
 
 {
     "name": "RFID Reader X1 (Updated)",
-    "description": "Updated description"
+    "description": "Updated description",
+    "serial_number": "SN-2026-004-UPD"
 }
 
-### 16. Delete Device
+### 19. Delete Device
 DELETE {{baseUrl}}/devices/{{createdDeviceId}}
 Content-Type: application/json
+Authorization: Bearer {{authToken}}
 X-Tenant-ID: {{tenantId}}

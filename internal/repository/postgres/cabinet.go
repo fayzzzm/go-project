@@ -23,7 +23,7 @@ const (
 	queryCabinetDelete  = "SELECT * FROM cabinets.delete($1::cabinets.cabinet_request)"
 )
 
-func (r *CabinetRepo) Create(ctx context.Context, c *domain.Cabinet) error {
+func (r *CabinetRepo) Create(ctx context.Context, c *domain.Cabinet, userID string) error {
 	req := CabinetRequest{
 		Name:        &c.Name,
 		Description: c.Description,
@@ -32,6 +32,7 @@ func (r *CabinetRepo) Create(ctx context.Context, c *domain.Cabinet) error {
 		Status:      c.Status,
 		TeamID:      c.TeamID,
 		TenantID:    c.TenantID,
+		UserID:      &userID,
 	}
 	val, err := ExecQueryOne[domain.Cabinet](ctx, r.pool, queryCabinetCreate, req)
 	if err != nil {

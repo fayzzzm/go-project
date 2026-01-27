@@ -3,14 +3,14 @@
 
 -- 1. TEAMS
 INSERT INTO teams.team (id, name, status, tenant_id) VALUES
-    ('11111111-1111-1111-1111-111111111111', 'IT Operations', 'active', 'tenant-1'),
-    ('22222222-2222-2222-2222-222222222222', 'Warehouse Logistics', 'active', 'tenant-1')
+    ('11111111-1111-1111-1111-111111111111', 'IT Operations', 'active', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11'),
+    ('22222222-2222-2222-2222-222222222222', 'Warehouse Logistics', 'active', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11')
 ON CONFLICT (id) DO NOTHING;
 
 -- 2. USERS
-INSERT INTO users.user (id, email, name, role) VALUES
-    ('aaaa1111-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'admin@itsware.com', 'Super Admin', 'admin'),
-    ('bbbb2222-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'tech@itsware.com', 'Field Technician', 'user')
+INSERT INTO users.user (id, email, name, role, tenant_id) VALUES
+    ('aaaa1111-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'admin@itsware.com', 'Super Admin', 'admin', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11'),
+    ('bbbb2222-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'tech@itsware.com', 'Field Technician', 'user', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11')
 ON CONFLICT (email) DO NOTHING;
 
 -- 3. CABINETS

@@ -16,12 +16,29 @@ func NewTeamRepo(pool *pgxpool.Pool) *TeamRepo {
 }
 
 const (
-	queryTeamCreate  = "SELECT * FROM teams.create($1::teams.team_request)"
-	queryTeamGetByID = "SELECT * FROM teams.get_by_id($1::teams.team_request)"
-	queryTeamList    = "SELECT * FROM teams.list($1::teams.team_request)"
-	queryTeamUpdate  = "SELECT * FROM teams.update($1::teams.team_request)"
-	queryTeamDelete  = "SELECT * FROM teams.delete($1::teams.team_request)"
+	queryTeamCreate    = "SELECT * FROM teams.create($1::teams.team_request)"
+	queryTeamGetByID   = "SELECT * FROM teams.get_by_id($1::teams.team_request)"
+	queryTeamList      = "SELECT * FROM teams.list($1::teams.team_request)"
+	queryTeamUpdate    = "SELECT * FROM teams.update($1::teams.team_request)"
+	queryTeamDelete    = "SELECT * FROM teams.delete($1::teams.team_request)"
+	queryTeamAddMember = "SELECT * FROM teams.add_member($1::teams.member_request)"
+	queryTeamIsMember  = "SELECT EXISTS(SELECT 1 FROM teams.members WHERE team_id=$1::uuid AND user_id=$2::uuid)"
 )
+
+func (r *TeamRepo) IsMember(ctx context.Context, teamID, userID string) (bool, error) {
+	var exists bool
+	err := r.pool.QueryRow(ctx, queryTeamIsMember, teamID, userID).Scan(&exists)
+	return exists, err
+}
+
+func (r *TeamRepo) AddMember(ctx context.Context, teamID, userID, role string) (*domain.Member, error) {
+	req := MemberRequest{
+		TeamID: &teamID,
+		UserID: &userID,
+		Role:   &role,
+	}
+	return ExecQueryOne[domain.Member](ctx, r.pool, queryTeamAddMember, req)
+}
 
 func (r *TeamRepo) Create(ctx context.Context, t *domain.Team) error {
 	req := TeamRequest{
@@ -64,11 +81,14 @@ func (r *TeamRepo) Delete(ctx context.Context, id string) error {
 	return err
 }
 
-func (r *TeamRepo) List(ctx context.Context, limit, offset int, tenantID string) ([]domain.Team, error) {
-	var tID *string
+func (r *TeamRepo) List(ctx context.Context, limit, offset int, tenantID, userID string) ([]domain.Team, error) {
+	var tID, uID *string
 	if tenantID != "" {
 		tID = &tenantID
 	}
-	req := TeamRequest{LimitVal: &limit, OffsetVal: &offset, TenantID: tID}
+	if userID != "" {
+		uID = &userID
+	}
+	req := TeamRequest{LimitVal: &limit, OffsetVal: &offset, TenantID: tID, UserID: uID}
 	return ExecQueryList[domain.Team](ctx, r.pool, queryTeamList, req)
 }

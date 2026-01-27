@@ -26,6 +26,7 @@ func NewDeviceProfileController(r gin.IRouter, uc DeviceProfileUseCase) {
 	c := &DeviceProfileController{uc: uc}
 
 	dps := r.Group("/device_profiles")
+	dps.Use(middleware.AuthMiddleware())
 	{
 		dps.POST("", middleware.BindJSON[usecase.CreateDeviceProfileInput](), utils.Handle(c.Create, http.StatusCreated))
 		dps.GET("", utils.Handle(c.List, http.StatusOK))
@@ -37,6 +38,7 @@ func NewDeviceProfileController(r gin.IRouter, uc DeviceProfileUseCase) {
 
 func (c *DeviceProfileController) Create(ctx *gin.Context) (any, error) {
 	input := middleware.GetBody[usecase.CreateDeviceProfileInput](ctx)
+	input.TenantID = middleware.GetTenantID(ctx)
 	return c.uc.Create(ctx.Request.Context(), input)
 }
 

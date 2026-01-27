@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/fayzzzm/go-project/internal/domain"
 	"github.com/jackc/pgx/v5"
@@ -56,9 +57,9 @@ func MapPgError(err error) error {
 		case "23505": // unique_violation
 			return domain.ErrConflict
 		case "23503": // foreign_key_violation
-			return domain.ErrInvalidInput
-		case "22P02": // invalid_text_representation (e.g., invalid UUID format)
-			return domain.ErrInvalidInput
+			return fmt.Errorf("%w: %s", domain.ErrInvalidInput, pgErr.Detail)
+		case "22P02": // invalid_text_representation
+			return fmt.Errorf("%w: %s", domain.ErrInvalidInput, pgErr.Message)
 		}
 	}
 	return err

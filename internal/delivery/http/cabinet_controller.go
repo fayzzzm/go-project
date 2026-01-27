@@ -11,7 +11,7 @@ import (
 )
 
 type CabinetUseCase interface {
-	Create(ctx context.Context, input usecase.CreateCabinetInput) (*usecase.CabinetOutput, error)
+	Create(ctx context.Context, input usecase.CreateCabinetInput, userID string) (*usecase.CabinetOutput, error)
 	GetByID(ctx context.Context, id string) (*usecase.CabinetOutput, error)
 	List(ctx context.Context, limit, offset int) ([]usecase.CabinetOutput, error)
 	Update(ctx context.Context, id string, input usecase.UpdateCabinetInput) (*usecase.CabinetOutput, error)
@@ -26,6 +26,7 @@ func NewCabinetController(r gin.IRouter, uc CabinetUseCase) {
 	c := &CabinetController{uc: uc}
 
 	cabinets := r.Group("/cabinets")
+	cabinets.Use(middleware.AuthMiddleware())
 	{
 		cabinets.POST("", middleware.BindJSON[usecase.CreateCabinetInput](), utils.Handle(c.Create, http.StatusCreated))
 		cabinets.GET("", utils.Handle(c.List, http.StatusOK))
@@ -37,7 +38,11 @@ func NewCabinetController(r gin.IRouter, uc CabinetUseCase) {
 
 func (c *CabinetController) Create(ctx *gin.Context) (any, error) {
 	input := middleware.GetBody[usecase.CreateCabinetInput](ctx)
-	return c.uc.Create(ctx.Request.Context(), input)
+	userID, err := middleware.GetUserID(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return c.uc.Create(ctx.Request.Context(), input, userID)
 }
 
 func (c *CabinetController) GetByID(ctx *gin.Context) (any, error) {

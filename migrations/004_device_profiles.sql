@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS device_profiles.device_profile (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name TEXT NOT NULL,
     description TEXT,
+    tenant_id UUID REFERENCES tenants.tenant(id),
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -19,7 +20,7 @@ CREATE TYPE device_profiles.device_profile_request AS (
     id            UUID,
     name          TEXT,
     description   TEXT,
-    tenant_id     TEXT,
+    tenant_id     UUID,
     limit_val     INTEGER,
     offset_val    INTEGER
 );
@@ -28,7 +29,7 @@ CREATE TYPE device_profiles.device_profile_response AS (
     id            UUID,
     name          TEXT,
     description   TEXT,
-    tenant_id     TEXT,
+    tenant_id     UUID,
     created_at    TIMESTAMPTZ,
     updated_at    TIMESTAMPTZ
 );
@@ -42,14 +43,14 @@ DECLARE
     v_id UUID;
 BEGIN
     INSERT INTO device_profiles.device_profile (
-        name, description
+        name, description, tenant_id
     )
     VALUES (
-        TRIM(r.name), TRIM(r.description)
+        TRIM(r.name), TRIM(r.description), r.tenant_id
     )
     RETURNING id INTO v_id;
     
-    RETURN QUERY SELECT id, name, description, ''::text as tenant_id, created_at, updated_at
+    RETURN QUERY SELECT id, name, description, tenant_id, created_at, updated_at
     FROM device_profiles.device_profile WHERE id = v_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -59,7 +60,7 @@ CREATE OR REPLACE FUNCTION device_profiles.get_by_id(r device_profiles.device_pr
 RETURNS SETOF device_profiles.device_profile_response AS $$
 BEGIN
     RETURN QUERY
-    SELECT id, name, description, ''::text as tenant_id, created_at, updated_at
+    SELECT id, name, description, tenant_id, created_at, updated_at
     FROM device_profiles.device_profile
     WHERE id = r.id;
 END;
@@ -70,8 +71,9 @@ CREATE OR REPLACE FUNCTION device_profiles.list(r device_profiles.device_profile
 RETURNS SETOF device_profiles.device_profile_response AS $$
 BEGIN
     RETURN QUERY
-    SELECT id, name, description, ''::text as tenant_id, created_at, updated_at
+    SELECT id, name, description, tenant_id, created_at, updated_at
     FROM device_profiles.device_profile
+    WHERE (r.tenant_id IS NULL OR tenant_id = r.tenant_id)
     ORDER BY created_at DESC
     LIMIT COALESCE(r.limit_val, 100)
     OFFSET COALESCE(r.offset_val, 0);
@@ -89,7 +91,7 @@ BEGIN
         description = COALESCE(r.description, description),
         updated_at = NOW()
     WHERE id = r.id
-    RETURNING id, name, description, ''::text as tenant_id, created_at, updated_at;
+    RETURNING id, name, description, tenant_id, created_at, updated_at;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 

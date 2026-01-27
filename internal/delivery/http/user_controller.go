@@ -13,7 +13,7 @@ import (
 type UserUseCase interface {
 	Create(ctx context.Context, input usecase.CreateUserInput) (*usecase.UserOutput, error)
 	GetByID(ctx context.Context, id string) (*usecase.UserOutput, error)
-	List(ctx context.Context, limit, offset int) ([]usecase.UserOutput, error)
+	List(ctx context.Context, limit, offset int, teamID, tenantID string) ([]usecase.UserOutput, error)
 	Update(ctx context.Context, id string, input usecase.UpdateUserInput) (*usecase.UserOutput, error)
 	Delete(ctx context.Context, id string) error
 }
@@ -28,10 +28,15 @@ func NewUserController(r gin.IRouter, uc UserUseCase) {
 	users := r.Group("/users")
 	{
 		users.POST("", middleware.BindJSON[usecase.CreateUserInput](), utils.Handle(c.Create, http.StatusCreated))
-		users.GET("", utils.Handle(c.List, http.StatusOK))
-		users.GET("/:id", utils.Handle(c.GetByID, http.StatusOK))
-		users.PUT("/:id", middleware.BindJSON[usecase.UpdateUserInput](), utils.Handle(c.Update, http.StatusOK))
-		users.DELETE("/:id", utils.Handle(c.Delete, http.StatusNoContent))
+
+		protected := users.Group("")
+		protected.Use(middleware.AuthMiddleware())
+		{
+			protected.GET("", utils.Handle(c.List, http.StatusOK))
+			protected.GET("/:id", utils.Handle(c.GetByID, http.StatusOK))
+			protected.PUT("/:id", middleware.BindJSON[usecase.UpdateUserInput](), utils.Handle(c.Update, http.StatusOK))
+			protected.DELETE("/:id", utils.Handle(c.Delete, http.StatusNoContent))
+		}
 	}
 }
 
@@ -48,8 +53,10 @@ func (c *UserController) GetByID(ctx *gin.Context) (any, error) {
 
 func (c *UserController) List(ctx *gin.Context) (any, error) {
 	limit, offset := middleware.GetPagination(ctx)
+	teamID := ctx.Query("team_id")
+	tenantID := middleware.GetTenantID(ctx)
 
-	return c.uc.List(ctx.Request.Context(), limit, offset)
+	return c.uc.List(ctx.Request.Context(), limit, offset, teamID, tenantID)
 }
 
 func (c *UserController) Update(ctx *gin.Context) (any, error) {

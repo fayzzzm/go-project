@@ -23,7 +23,7 @@ type CreateDeviceInput struct {
 	DeviceProfileID string `json:"device_profile_id"`
 	CabinetID       string `json:"cabinet_id"`
 	TeamID          string `json:"team_id"`
-	TenantID        string `json:"tenant_id" binding:"required,uuid"`
+	TenantID        string `json:"tenant_id"`
 }
 
 type DeviceOutput struct {
@@ -57,28 +57,39 @@ func (uc *DeviceUseCase) Create(ctx context.Context, input CreateDeviceInput) (*
 		teamID = &val
 	}
 
+	// Handle Description and EPC pointers
+	var desc, epc *string
+	if input.Description != "" {
+		val := input.Description
+		desc = &val
+	}
+	if input.EPC != "" {
+		val := input.EPC
+		epc = &val
+	}
+
+	var tenantID *string
+	if input.TenantID != "" {
+		val := input.TenantID
+		tenantID = &val
+	}
+
 	device := &domain.Device{
 		Name:            input.Name,
-		Description:     input.Description,
+		Description:     desc,
 		SerialNumber:    input.SerialNumber,
-		EPC:             input.EPC,
+		EPC:             epc,
 		DeviceProfileID: profileID,
 		CabinetID:       cabinetID,
 		TeamID:          teamID,
-		TenantID:        input.TenantID,
+		TenantID:        tenantID,
 	}
 
 	if err := uc.svc.Create(ctx, device); err != nil {
 		return nil, err
 	}
 
-	return &DeviceOutput{
-		ID:           device.ID,
-		Name:         device.Name,
-		SerialNumber: device.SerialNumber,
-		Description:  device.Description,
-		EPC:          device.EPC,
-	}, nil
+	return toDeviceOutput(device), nil
 }
 
 func (uc *DeviceUseCase) GetByID(ctx context.Context, id string) (*DeviceOutput, error) {
@@ -87,13 +98,7 @@ func (uc *DeviceUseCase) GetByID(ctx context.Context, id string) (*DeviceOutput,
 		return nil, err
 	}
 
-	return &DeviceOutput{
-		ID:           device.ID,
-		Name:         device.Name,
-		SerialNumber: device.SerialNumber,
-		Description:  device.Description,
-		EPC:          device.EPC,
-	}, nil
+	return toDeviceOutput(device), nil
 }
 
 func (uc *DeviceUseCase) List(ctx context.Context, limit, offset int) ([]DeviceOutput, error) {
@@ -113,13 +118,7 @@ func (uc *DeviceUseCase) List(ctx context.Context, limit, offset int) ([]DeviceO
 
 	output := make([]DeviceOutput, len(devices))
 	for i, d := range devices {
-		output[i] = DeviceOutput{
-			ID:           d.ID,
-			Name:         d.Name,
-			SerialNumber: d.SerialNumber,
-			Description:  d.Description,
-			EPC:          d.EPC,
-		}
+		output[i] = *toDeviceOutput(&d)
 	}
 	return output, nil
 }
@@ -130,26 +129,74 @@ func (uc *DeviceUseCase) Update(ctx context.Context, id string, input CreateDevi
 		return nil, err
 	}
 
+	// Security Check: Ensure Device belongs to the requested Tenant
+	if input.TenantID != "" {
+		if device.TenantID != nil && *device.TenantID != input.TenantID {
+			return nil, domain.ErrUnauthorized
+		}
+	}
+
 	device.Name = input.Name
-	device.Description = input.Description
-	device.EPC = input.EPC
+	if input.Description != "" {
+		val := input.Description
+		device.Description = &val
+	}
+	if input.EPC != "" {
+		val := input.EPC
+		device.EPC = &val
+	}
 	if input.SerialNumber != "" {
 		device.SerialNumber = input.SerialNumber
+	}
+
+	if input.DeviceProfileID != "" {
+		val := input.DeviceProfileID
+		device.DeviceProfileID = &val
+	}
+	if input.CabinetID != "" {
+		val := input.CabinetID
+		device.CabinetID = &val
+	}
+	if input.TeamID != "" {
+		val := input.TeamID
+		device.TeamID = &val
 	}
 
 	if err := uc.svc.Update(ctx, device); err != nil {
 		return nil, err
 	}
 
-	return &DeviceOutput{
-		ID:           device.ID,
-		Name:         device.Name,
-		SerialNumber: device.SerialNumber,
-		Description:  device.Description,
-		EPC:          device.EPC,
-	}, nil
+	return toDeviceOutput(device), nil
 }
 
-func (uc *DeviceUseCase) Delete(ctx context.Context, id string) error {
+func toDeviceOutput(d *domain.Device) *DeviceOutput {
+	desc := ""
+	if d.Description != nil {
+		desc = *d.Description
+	}
+	epc := ""
+	if d.EPC != nil {
+		epc = *d.EPC
+	}
+	return &DeviceOutput{
+		ID:           d.ID,
+		Name:         d.Name,
+		SerialNumber: d.SerialNumber,
+		Description:  desc,
+		EPC:          epc,
+	}
+}
+
+func (uc *DeviceUseCase) Delete(ctx context.Context, id, tenantID string) error {
+	// Security Check
+	if tenantID != "" {
+		device, err := uc.svc.GetByID(ctx, id)
+		if err != nil {
+			return err
+		}
+		if device.TenantID != nil && *device.TenantID != tenantID {
+			return domain.ErrUnauthorized
+		}
+	}
 	return uc.svc.Delete(ctx, id)
 }

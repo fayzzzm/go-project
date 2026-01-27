@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS teams.team (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name TEXT NOT NULL,
     status TEXT DEFAULT 'active',
-    tenant_id TEXT,
+    tenant_id UUID REFERENCES tenants.tenant(id),
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),
     created_by TEXT DEFAULT '',
@@ -20,21 +20,32 @@ CREATE TABLE IF NOT EXISTS teams.team (
 -- INDEX: Active Teams
 CREATE INDEX IF NOT EXISTS idx_teams_active ON teams.team(status) WHERE status = 'active';
 
+-- MEMBERSHIP TABLE (Replaces old user_teams)
+CREATE TABLE IF NOT EXISTS teams.members (
+    team_id UUID NOT NULL REFERENCES teams.team(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES users.user(id) ON DELETE CASCADE,
+    role VARCHAR(50) DEFAULT 'MEMBER',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    PRIMARY KEY (team_id, user_id)
+);
+CREATE INDEX IF NOT EXISTS idx_team_members_user ON teams.members(user_id);
+
 -- TYPE: Request/Response DTOs
 CREATE TYPE teams.team_request AS (
     id            UUID,
     name          TEXT,
     status        TEXT,
-    tenant_id     TEXT,
+    tenant_id     UUID,
     limit_val     INTEGER,
-    offset_val    INTEGER
+    offset_val    INTEGER,
+    user_id       UUID
 );
 
 CREATE TYPE teams.team_response AS (
     id            UUID,
     name          TEXT,
     status        TEXT,
-    tenant_id     TEXT,
+    tenant_id     UUID,
     created_at    TIMESTAMPTZ,
     updated_at    TIMESTAMPTZ,
     created_by    TEXT,
@@ -77,10 +88,17 @@ $$ LANGUAGE plpgsql SECURITY DEFINER STABLE;
 CREATE OR REPLACE FUNCTION teams.list(r teams.team_request)
 RETURNS SETOF teams.team_response AS $$
 BEGIN
+    -- Check Tenant Access
+    IF r.user_id IS NOT NULL AND r.tenant_id IS NOT NULL THEN
+        IF NOT users.check_tenant_access(r.user_id, r.tenant_id) THEN
+             RAISE EXCEPTION 'User % does not belong to tenant %', r.user_id, r.tenant_id USING ERRCODE = 'P0001';
+        END IF;
+    END IF;
+
     RETURN QUERY
     SELECT id, name, status, tenant_id, created_at, updated_at, created_by, updated_by
     FROM teams.team
-    WHERE (r.tenant_id IS NULL OR tenant_id = r.tenant_id)
+    WHERE tenant_id = r.tenant_id
     ORDER BY created_at DESC
     LIMIT COALESCE(r.limit_val, 100)
     OFFSET COALESCE(r.offset_val, 0);
@@ -110,3 +128,39 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+-- MEMBER TYPES
+CREATE TYPE teams.member_request AS (
+    team_id    UUID,
+    user_id    UUID,
+    role       TEXT
+);
+
+CREATE TYPE teams.member_response AS (
+    team_id    UUID,
+    user_id    UUID,
+    role       TEXT,
+    created_at TIMESTAMPTZ
+);
+
+-- Add Member
+CREATE OR REPLACE FUNCTION teams.add_member(r teams.member_request)
+RETURNS SETOF teams.member_response AS $$
+BEGIN
+    RETURN QUERY
+    INSERT INTO teams.members (team_id, user_id, role)
+    VALUES (r.team_id, r.user_id, COALESCE(r.role, 'MEMBER'))
+    ON CONFLICT (team_id, user_id) DO UPDATE SET role = EXCLUDED.role
+    RETURNING team_id, user_id, role::TEXT, created_at;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Get User Teams
+CREATE OR REPLACE FUNCTION teams.get_for_user(p_user_id UUID)
+RETURNS SETOF teams.member_response AS $$
+BEGIN
+    RETURN QUERY
+    SELECT m.team_id, m.user_id, m.role::TEXT, m.created_at
+    FROM teams.members m
+    WHERE m.user_id = p_user_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER STABLE;

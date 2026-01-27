@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS devices.device (
     device_profile_id UUID REFERENCES device_profiles.device_profile(id),
     cabinet_id UUID REFERENCES cabinets.cabinet(id),
     team_id UUID REFERENCES teams.team(id),
+    tenant_id UUID REFERENCES tenants.tenant(id),
     status TEXT DEFAULT 'available',
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
@@ -34,7 +35,7 @@ CREATE TYPE devices.device_request AS (
     device_profile_id  UUID,
     cabinet_id         UUID,
     team_id            UUID,
-    tenant_id          TEXT,
+    tenant_id          UUID,
     limit_val          INTEGER,
     offset_val         INTEGER
 );
@@ -48,6 +49,7 @@ CREATE TYPE devices.device_response AS (
     device_profile_id  UUID,
     cabinet_id         UUID,
     team_id            UUID,
+    tenant_id          UUID,
     status             TEXT,
     created_at         TIMESTAMPTZ
 );
@@ -60,17 +62,17 @@ DECLARE
 BEGIN
     INSERT INTO devices.device (
         name, description, serial_number, epc, 
-        device_profile_id, cabinet_id, team_id
+        device_profile_id, cabinet_id, team_id, tenant_id
     )
     VALUES (
         r.name, r.description, r.serial_number, r.epc, 
-        r.device_profile_id, r.cabinet_id, r.team_id
+        r.device_profile_id, r.cabinet_id, r.team_id, r.tenant_id
     )
     RETURNING id INTO v_id;
     
     RETURN QUERY SELECT 
         id, name, description, serial_number, epc, 
-        device_profile_id, cabinet_id, team_id, status, created_at 
+        device_profile_id, cabinet_id, team_id, tenant_id, status, created_at 
     FROM devices.device WHERE id = v_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -80,7 +82,7 @@ RETURNS SETOF devices.device_response AS $$
 BEGIN
     RETURN QUERY
     SELECT id, name, description, serial_number, epc, 
-           device_profile_id, cabinet_id, team_id, status, created_at
+           device_profile_id, cabinet_id, team_id, tenant_id, status, created_at
     FROM devices.device
     WHERE id = r.id;
 END;
@@ -91,8 +93,9 @@ RETURNS SETOF devices.device_response AS $$
 BEGIN
     RETURN QUERY
     SELECT id, name, description, serial_number, epc, 
-           device_profile_id, cabinet_id, team_id, status, created_at
+           device_profile_id, cabinet_id, team_id, tenant_id, status, created_at
     FROM devices.device
+    WHERE (r.tenant_id IS NULL OR tenant_id = r.tenant_id)
     ORDER BY created_at DESC
     LIMIT COALESCE(r.limit_val, 100)
     OFFSET COALESCE(r.offset_val, 0);
@@ -114,7 +117,7 @@ BEGIN
         updated_at = NOW()
     WHERE id = r.id
     RETURNING id, name, description, serial_number, epc, 
-              device_profile_id, cabinet_id, team_id, status, created_at;
+              device_profile_id, cabinet_id, team_id, tenant_id, status, created_at;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
@@ -130,7 +133,7 @@ RETURNS SETOF devices.device_response AS $$
 BEGIN
     RETURN QUERY
     SELECT id, name, description, serial_number, epc, 
-           device_profile_id, cabinet_id, team_id, status, created_at
+           device_profile_id, cabinet_id, team_id, tenant_id, status, created_at
     FROM devices.device
     WHERE epc = r.epc;
 END;
@@ -141,7 +144,7 @@ RETURNS SETOF devices.device_response AS $$
 BEGIN
     RETURN QUERY
     SELECT id, name, description, serial_number, epc, 
-           device_profile_id, cabinet_id, team_id, status, created_at
+           device_profile_id, cabinet_id, team_id, tenant_id, status, created_at
     FROM devices.device
     WHERE serial_number = r.serial_number;
 END;
@@ -153,13 +156,13 @@ BEGIN
     RETURN QUERY
     INSERT INTO devices.device (
         name, description, serial_number, epc, 
-        device_profile_id, cabinet_id, team_id
+        device_profile_id, cabinet_id, team_id, tenant_id
     )
     SELECT 
         r.name, r.description, r.serial_number, r.epc, 
-        r.device_profile_id, r.cabinet_id, r.team_id
+        r.device_profile_id, r.cabinet_id, r.team_id, r.tenant_id
     FROM unnest(r_list) r
     RETURNING id, name, description, serial_number, epc, 
-              device_profile_id, cabinet_id, team_id, status, created_at;
+              device_profile_id, cabinet_id, team_id, tenant_id, status, created_at;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;

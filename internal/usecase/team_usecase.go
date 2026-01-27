@@ -10,20 +10,27 @@ import (
 type TeamServicer interface {
 	Create(ctx context.Context, t *domain.Team) error
 	GetByID(ctx context.Context, id string) (*domain.Team, error)
-	List(ctx context.Context, limit, offset int, tenantID string) ([]domain.Team, error)
+	List(ctx context.Context, limit, offset int, tenantID, userID string) ([]domain.Team, error)
 	Update(ctx context.Context, t *domain.Team) error
 	Delete(ctx context.Context, id string) error
+	AddMember(ctx context.Context, teamID, userID, role string) (*domain.Member, error)
+	IsMember(ctx context.Context, teamID, userID string) (bool, error)
 }
 
 type CreateTeamInput struct {
 	Name     string `json:"name" binding:"required"`
 	Status   string `json:"status"`
-	TenantID string `json:"tenant_id" binding:"required,uuid"`
+	TenantID string `json:"tenant_id"`
 }
 
 type UpdateTeamInput struct {
 	Name   string `json:"name"`
 	Status string `json:"status"`
+}
+
+type AddMemberInput struct {
+	UserID string `json:"user_id" binding:"required,uuid"`
+	Role   string `json:"role"`
 }
 
 type TeamOutput struct {
@@ -33,6 +40,13 @@ type TeamOutput struct {
 	TenantID  string    `json:"tenant_id"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
+}
+
+type MemberOutput struct {
+	TeamID    string    `json:"team_id"`
+	UserID    string    `json:"user_id"`
+	Role      string    `json:"role"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 type TeamUseCase struct {
@@ -75,7 +89,7 @@ func (uc *TeamUseCase) GetByID(ctx context.Context, id string) (*TeamOutput, err
 	return toTeamOutput(team), nil
 }
 
-func (uc *TeamUseCase) List(ctx context.Context, limit, offset int, tenantID string) ([]TeamOutput, error) {
+func (uc *TeamUseCase) List(ctx context.Context, limit, offset int, tenantID, userID string) ([]TeamOutput, error) {
 	if limit <= 0 {
 		limit = 100
 	}
@@ -85,7 +99,7 @@ func (uc *TeamUseCase) List(ctx context.Context, limit, offset int, tenantID str
 	if offset < 0 {
 		offset = 0
 	}
-	teams, err := uc.svc.List(ctx, limit, offset, tenantID)
+	teams, err := uc.svc.List(ctx, limit, offset, tenantID, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -117,6 +131,19 @@ func (uc *TeamUseCase) Update(ctx context.Context, id string, input UpdateTeamIn
 
 func (uc *TeamUseCase) Delete(ctx context.Context, id string) error {
 	return uc.svc.Delete(ctx, id)
+}
+
+func (uc *TeamUseCase) AddMember(ctx context.Context, teamID string, input AddMemberInput) (*MemberOutput, error) {
+	member, err := uc.svc.AddMember(ctx, teamID, input.UserID, input.Role)
+	if err != nil {
+		return nil, err
+	}
+	return &MemberOutput{
+		TeamID:    member.TeamID,
+		UserID:    member.UserID,
+		Role:      member.Role,
+		CreatedAt: member.CreatedAt,
+	}, nil
 }
 
 func toTeamOutput(t *domain.Team) *TeamOutput {

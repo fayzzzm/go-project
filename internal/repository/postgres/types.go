@@ -23,8 +23,11 @@ type UserRequest struct {
 	Role         *string                `db:"role"`
 	AppMetadata  map[string]interface{} `db:"app_metadata"`
 	UserMetadata map[string]interface{} `db:"user_metadata"`
+	Password     *string                `db:"password"`
 	LimitVal     *int                   `db:"limit_val"`
 	OffsetVal    *int                   `db:"offset_val"`
+	TeamID       *string                `db:"team_id"`
+	TenantID     *string                `db:"tenant_id"`
 }
 
 type CabinetRequest struct {
@@ -38,6 +41,7 @@ type CabinetRequest struct {
 	TenantID    *string `db:"tenant_id"`
 	LimitVal    *int    `db:"limit_val"`
 	OffsetVal   *int    `db:"offset_val"`
+	UserID      *string `db:"user_id"`
 }
 
 type TeamRequest struct {
@@ -47,6 +51,7 @@ type TeamRequest struct {
 	TenantID  *string `db:"tenant_id"`
 	LimitVal  *int    `db:"limit_val"`
 	OffsetVal *int    `db:"offset_val"`
+	UserID    *string `db:"user_id"`
 }
 
 type DeviceProfileRequest struct {
@@ -56,4 +61,16 @@ type DeviceProfileRequest struct {
 	TenantID    *string `db:"tenant_id"`
 	LimitVal    *int    `db:"limit_val"`
 	OffsetVal   *int    `db:"offset_val"`
+}
+
+type MemberRequest struct {
+	TeamID *string `db:"team_id"`
+	UserID *string `db:"user_id"`
+	Role   *string `db:"role"`
+}
+
+type TenantRequest struct {
+	ID        *string `db:"id"`
+	LimitVal  *int    `db:"limit_val"`
+	OffsetVal *int    `db:"offset_val"`
 }

@@ -7,7 +7,7 @@ import (
 )
 
 type CabinetServicer interface {
-	Create(ctx context.Context, c *domain.Cabinet) error
+	Create(ctx context.Context, c *domain.Cabinet, userID string) error
 	GetByID(ctx context.Context, id string) (*domain.Cabinet, error)
 	List(ctx context.Context, limit, offset int) ([]domain.Cabinet, error)
 	Update(ctx context.Context, c *domain.Cabinet) error
@@ -38,10 +38,12 @@ type CabinetUseCase struct {
 }
 
 func NewCabinetUseCase(svc CabinetServicer) *CabinetUseCase {
-	return &CabinetUseCase{svc: svc}
+	return &CabinetUseCase{
+		svc: svc,
+	}
 }
 
-func (uc *CabinetUseCase) Create(ctx context.Context, input CreateCabinetInput) (*CabinetOutput, error) {
+func (uc *CabinetUseCase) Create(ctx context.Context, input CreateCabinetInput, userID string) (*CabinetOutput, error) {
 	var location, teamID *string
 	if input.Location != "" {
 		val := input.Location
@@ -58,7 +60,7 @@ func (uc *CabinetUseCase) Create(ctx context.Context, input CreateCabinetInput) 
 		TeamID:   teamID,
 	}
 
-	if err := uc.svc.Create(ctx, cabinet); err != nil {
+	if err := uc.svc.Create(ctx, cabinet, userID); err != nil {
 		return nil, err
 	}
 

@@ -7,7 +7,7 @@ import (
 )
 
 type CabinetRepository interface {
-	Create(ctx context.Context, c *domain.Cabinet) error
+	Create(ctx context.Context, c *domain.Cabinet, userID string) error
 	GetByID(ctx context.Context, id string) (*domain.Cabinet, error)
 	List(ctx context.Context, limit, offset int) ([]domain.Cabinet, error)
 	Update(ctx context.Context, c *domain.Cabinet) error
@@ -22,8 +22,8 @@ func NewCabinetService(repo CabinetRepository) *CabinetService {
 	return &CabinetService{repo: repo}
 }
 
-func (s *CabinetService) Create(ctx context.Context, c *domain.Cabinet) error {
-	return s.repo.Create(ctx, c)
+func (s *CabinetService) Create(ctx context.Context, c *domain.Cabinet, userID string) error {
+	return s.repo.Create(ctx, c, userID)
 }
 
 func (s *CabinetService) GetByID(ctx context.Context, id string) (*domain.Cabinet, error) {
