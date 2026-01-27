@@ -58,8 +58,5 @@ func (r *UserRepo) List(ctx context.Context, limit, offset int, teamID, tenantID
 }
 
 func (r *UserRepo) GetForLogin(ctx context.Context, email string) (*domain.User, error) {
-	// The function users.get_for_login($1) takes raw text, not user_request
-	// But we wait, I defined it as p_email TEXT.
-	// And the SQL call query defined above uses $1::text.
 	return ExecQueryOne[domain.User](ctx, r.pool, queryUserGetForLogin, email)
 }
