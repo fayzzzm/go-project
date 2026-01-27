@@ -19,9 +19,12 @@ func AuditMiddleware() gin.HandlerFunc {
 
 		latency := time.Since(start)
 		status := c.Writer.Status()
-		user, _ := c.Get("user_id") // Assume set by Auth
-		tenant, _ := c.Get("tenant_id")
+		user, _ := c.Get(ContextUserID) // Assume set by Auth
+		tenant, _ := c.Get(ContextTenantID)
 
+		// TODO: Connect a NoSQL database (e.g., MongoDB, ElasticSearch) here to persist audit logs.
+		// For SOC 2 compliance, logs should be retained securely and be searchable.
+		// Example: mongoClient.Database("audit").Collection("logs").InsertOne(ctx, auditEntry)
 		log.Printf("[AUDIT] %s | %d | %s | %s | User: %v | Tenant: %v | Latency: %v",
 			start.Format(time.RFC3339),
 			status,
