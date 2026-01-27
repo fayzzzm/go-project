@@ -3,6 +3,7 @@ package middleware
 import (
 	"errors"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/fayzzzm/go-project/internal/domain"
@@ -15,8 +16,15 @@ const (
 	ContextUserID       = "user_id"
 	ContextUserRole     = "user_role"
 	ContextTenantID     = "tenant_id"
-	JWT_SECRET          = "CHANGE_THIS_TO_ENV_VAR" // Must match UseCase
 )
+
+func getJWTSecret() []byte {
+	secret := os.Getenv("JWT_SECRET")
+	if secret == "" {
+		panic("JWT_SECRET environment variable is not set")
+	}
+	return []byte(secret)
+}
 
 func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -38,7 +46,7 @@ func AuthMiddleware() gin.HandlerFunc {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, errors.New("unexpected signing method")
 			}
-			return []byte(JWT_SECRET), nil
+			return getJWTSecret(), nil
 		})
 
 		if err != nil {

@@ -3,6 +3,7 @@ package usecase
 import (
 	"context"
 	"errors"
+	"os"
 	"time"
 
 	"github.com/fayzzzm/go-project/internal/domain"
@@ -33,9 +34,13 @@ type AuthUseCase struct {
 }
 
 func NewAuthUseCase(svc UserServicer) *AuthUseCase {
+	secret := os.Getenv("JWT_SECRET")
+	if secret == "" {
+		panic("JWT_SECRET environment variable is not set")
+	}
 	return &AuthUseCase{
 		svc:       svc,
-		jwtSecret: "CHANGE_THIS_TO_ENV_VAR", // TODO: Load from config
+		jwtSecret: secret,
 	}
 }
 
