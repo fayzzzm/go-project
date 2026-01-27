@@ -1,7 +1,30 @@
-.env
+# Binaries
+main
+*.exe
+*.dll
+*.so
+*.dylib
 bin/
 dist/
+
+# Env / Secrets
+.env
+.env.*
+*.secrets
+
+# Dependencies
 vendor/
+
+# Docker
+postgres_data/
+
+# Testing
+*.test
+*.out
+coverage.txt
+
+# System / IDEs
 .DS_Store
 .idea/
 .vscode/
+*.swp
