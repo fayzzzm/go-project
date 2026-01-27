@@ -9,6 +9,18 @@ type Pagination struct {
 	Offset int
 }
 
+func (p *Pagination) Normalize() {
+	if p.Limit <= 0 {
+		p.Limit = 100
+	}
+	if p.Limit > 1000 {
+		p.Limit = 1000
+	}
+	if p.Offset < 0 {
+		p.Offset = 0
+	}
+}
+
 // Tenant represents a customer or organization.
 type Tenant struct {
 	ID        string    `json:"id" db:"id"`

@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/fayzzzm/go-project/internal/domain"
+	"github.com/fayzzzm/go-project/pkg/utils"
 )
 
 type TeamServicer interface {
@@ -59,20 +60,10 @@ func NewTeamUseCase(svc TeamServicer) *TeamUseCase {
 }
 
 func (uc *TeamUseCase) Create(ctx context.Context, input CreateTeamInput) (*TeamOutput, error) {
-	var status *string
-	if input.Status != "" {
-		val := input.Status
-		status = &val
-	}
-	var tenantID *string
-	if input.TenantID != "" {
-		val := input.TenantID
-		tenantID = &val
-	}
 	team := &domain.Team{
 		Name:     input.Name,
-		Status:   status,
-		TenantID: tenantID,
+		Status:   utils.StringPtrOrNil(input.Status),
+		TenantID: utils.StringPtrOrNil(input.TenantID),
 	}
 
 	if err := uc.svc.Create(ctx, team); err != nil {
@@ -91,18 +82,8 @@ func (uc *TeamUseCase) GetByID(ctx context.Context, id string) (*TeamOutput, err
 }
 
 func (uc *TeamUseCase) List(ctx context.Context, p domain.Pagination, tenantID, userID string) ([]TeamOutput, error) {
-	limit := p.Limit
-	offset := p.Offset
-	if limit <= 0 {
-		limit = 100
-	}
-	if limit > 1000 {
-		limit = 1000
-	}
-	if offset < 0 {
-		offset = 0
-	}
-	teams, err := uc.svc.List(ctx, limit, offset, tenantID, userID)
+	p.Normalize()
+	teams, err := uc.svc.List(ctx, p.Limit, p.Offset, tenantID, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -129,14 +110,9 @@ func (uc *TeamUseCase) ListForUser(ctx context.Context, userID string) ([]TeamOu
 
 func (uc *TeamUseCase) Update(ctx context.Context, id string, input UpdateTeamInput) (*TeamOutput, error) {
 	team := &domain.Team{
-		ID: id,
-	}
-	if input.Name != "" {
-		team.Name = input.Name
-	}
-	if input.Status != "" {
-		val := input.Status
-		team.Status = &val
+		ID:     id,
+		Name:   input.Name,
+		Status: utils.StringPtrOrNil(input.Status),
 	}
 
 	if err := uc.svc.Update(ctx, team); err != nil {

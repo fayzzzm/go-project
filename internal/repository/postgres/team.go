@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/fayzzzm/go-project/internal/domain"
+	"github.com/fayzzzm/go-project/pkg/utils"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -33,91 +34,42 @@ func (r *TeamRepo) IsMember(ctx context.Context, teamID, userID string) (bool, e
 }
 
 func (r *TeamRepo) AddMember(ctx context.Context, teamID, userID, role string) (*domain.Member, error) {
-	req := MemberRequest{
-		TeamID: &teamID,
-		UserID: &userID,
-		Role:   &role,
-	}
-	return ExecQueryOne[domain.Member](ctx, r.pool, queryTeamAddMember, req)
+	return ExecQueryOne[domain.Member](ctx, r.pool, queryTeamAddMember, MemberRequest{
+		TeamID: &teamID, UserID: &userID, Role: &role,
+	})
 }
 
 func (r *TeamRepo) Create(ctx context.Context, t *domain.Team) error {
-	req := TeamRequest{
-		Name:     &t.Name,
-		Status:   t.Status,
-		TenantID: t.TenantID,
+	val, err := ExecQueryOne[domain.Team](ctx, r.pool, queryTeamCreate, NewTeamRequest(t))
+	if err == nil {
+		*t = *val
 	}
-
-	val, err := ExecQueryOne[domain.Team](ctx, r.pool, queryTeamCreate, req)
-	if err != nil {
-		return err
-	}
-	*t = *val
-	return nil
+	return err
 }
 
 func (r *TeamRepo) GetByID(ctx context.Context, id string) (*domain.Team, error) {
-	req := TeamRequest{ID: &id}
-	return ExecQueryOne[domain.Team](ctx, r.pool, queryTeamGetByID, req)
+	return ExecQueryOne[domain.Team](ctx, r.pool, queryTeamGetByID, TeamRequest{ID: &id})
 }
 
 func (r *TeamRepo) Update(ctx context.Context, t *domain.Team) error {
-	req := TeamRequest{
-		ID:     &t.ID,
-		Name:   &t.Name,
-		Status: t.Status,
-		// TenantID not updatable usually or passed if needed
+	val, err := ExecQueryOne[domain.Team](ctx, r.pool, queryTeamUpdate, NewTeamRequest(t))
+	if err == nil {
+		*t = *val
 	}
-	val, err := ExecQueryOne[domain.Team](ctx, r.pool, queryTeamUpdate, req)
-	if err != nil {
-		return err
-	}
-	*t = *val
-	return nil
+	return err
 }
 
 func (r *TeamRepo) Delete(ctx context.Context, id string) error {
-	req := TeamRequest{ID: &id}
-	_, err := r.pool.Exec(ctx, queryTeamDelete, req)
+	_, err := r.pool.Exec(ctx, queryTeamDelete, TeamRequest{ID: &id})
 	return err
 }
 
 func (r *TeamRepo) List(ctx context.Context, limit, offset int, tenantID, userID string) ([]domain.Team, error) {
-	var tID, uID *string
-	if tenantID != "" {
-		tID = &tenantID
-	}
-	if userID != "" {
-		uID = &userID
-	}
-	req := TeamRequest{LimitVal: &limit, OffsetVal: &offset, TenantID: tID, UserID: uID}
-	return ExecQueryList[domain.Team](ctx, r.pool, queryTeamList, req)
+	return ExecQueryList[domain.Team](ctx, r.pool, queryTeamList, TeamRequest{
+		LimitVal: &limit, OffsetVal: &offset, TenantID: utils.StringPtrOrNil(tenantID), UserID: utils.StringPtrOrNil(userID),
+	})
 }
 
 func (r *TeamRepo) GetForUser(ctx context.Context, userID string) ([]domain.Team, error) {
-	rows, err := r.pool.Query(ctx, queryTeamGetForUser, userID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var teams []domain.Team
-	for rows.Next() {
-		var t domain.Team
-		// team_response: id, name, status, tenant_id, created_at, updated_at, created_by, updated_by
-		if err := rows.Scan(
-			&t.ID,
-			&t.Name,
-			&t.Status,
-			&t.TenantID,
-			&t.CreatedAt,
-			&t.UpdatedAt,
-			&t.CreatedBy,
-			&t.UpdatedBy,
-		); err != nil {
-			return nil, err
-		}
-		teams = append(teams, t)
-	}
-	return teams, nil
+	return ExecQueryList[domain.Team](ctx, r.pool, queryTeamGetForUser, userID)
 }

@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/fayzzzm/go-project/internal/domain"
+	"github.com/fayzzzm/go-project/pkg/utils"
 )
 
 type DeviceProfileServicer interface {
@@ -44,20 +45,10 @@ func NewDeviceProfileUseCase(svc DeviceProfileServicer) *DeviceProfileUseCase {
 }
 
 func (uc *DeviceProfileUseCase) Create(ctx context.Context, input CreateDeviceProfileInput) (*DeviceProfileOutput, error) {
-	var desc *string
-	if input.Description != "" {
-		val := input.Description
-		desc = &val
-	}
-	var tenantID *string
-	if input.TenantID != "" {
-		val := input.TenantID
-		tenantID = &val
-	}
 	dp := &domain.DeviceProfile{
 		Name:        input.Name,
-		Description: desc,
-		TenantID:    tenantID,
+		Description: utils.StringPtrOrNil(input.Description),
+		TenantID:    utils.StringPtrOrNil(input.TenantID),
 	}
 
 	if err := uc.svc.Create(ctx, dp); err != nil {
@@ -76,18 +67,8 @@ func (uc *DeviceProfileUseCase) GetByID(ctx context.Context, id string) (*Device
 }
 
 func (uc *DeviceProfileUseCase) List(ctx context.Context, p domain.Pagination) ([]DeviceProfileOutput, error) {
-	limit := p.Limit
-	offset := p.Offset
-	if limit <= 0 {
-		limit = 100
-	}
-	if limit > 1000 {
-		limit = 1000
-	}
-	if offset < 0 {
-		offset = 0
-	}
-	dps, err := uc.svc.List(ctx, limit, offset)
+	p.Normalize()
+	dps, err := uc.svc.List(ctx, p.Limit, p.Offset)
 	if err != nil {
 		return nil, err
 	}
@@ -101,14 +82,9 @@ func (uc *DeviceProfileUseCase) List(ctx context.Context, p domain.Pagination) (
 
 func (uc *DeviceProfileUseCase) Update(ctx context.Context, id string, input UpdateDeviceProfileInput) (*DeviceProfileOutput, error) {
 	dp := &domain.DeviceProfile{
-		ID: id,
-	}
-	if input.Name != "" {
-		dp.Name = input.Name
-	}
-	if input.Description != "" {
-		val := input.Description
-		dp.Description = &val
+		ID:          id,
+		Name:        input.Name,
+		Description: utils.StringPtrOrNil(input.Description),
 	}
 
 	if err := uc.svc.Update(ctx, dp); err != nil {
@@ -122,19 +98,11 @@ func (uc *DeviceProfileUseCase) Delete(ctx context.Context, id string) error {
 }
 
 func toDeviceProfileOutput(dp *domain.DeviceProfile) *DeviceProfileOutput {
-	desc := ""
-	if dp.Description != nil {
-		desc = *dp.Description
-	}
-	tenantID := ""
-	if dp.TenantID != nil {
-		tenantID = *dp.TenantID
-	}
 	return &DeviceProfileOutput{
 		ID:          dp.ID,
 		Name:        dp.Name,
-		Description: desc,
-		TenantID:    tenantID,
+		Description: utils.StringValue(dp.Description),
+		TenantID:    utils.StringValue(dp.TenantID),
 		CreatedAt:   dp.CreatedAt,
 		UpdatedAt:   dp.UpdatedAt,
 	}

@@ -24,54 +24,30 @@ const (
 )
 
 func (r *CabinetRepo) Create(ctx context.Context, c *domain.Cabinet, userID string) error {
-	req := CabinetRequest{
-		Name:        &c.Name,
-		Description: c.Description,
-		Location:    c.Location,
-		MachineID:   c.MachineID,
-		Status:      c.Status,
-		TeamID:      c.TeamID,
-		TenantID:    c.TenantID,
-		UserID:      &userID,
+	val, err := ExecQueryOne[domain.Cabinet](ctx, r.pool, queryCabinetCreate, NewCabinetRequest(c, &userID))
+	if err == nil {
+		*c = *val
 	}
-	val, err := ExecQueryOne[domain.Cabinet](ctx, r.pool, queryCabinetCreate, req)
-	if err != nil {
-		return err
-	}
-	*c = *val
-	return nil
+	return err
 }
 
 func (r *CabinetRepo) GetByID(ctx context.Context, id string) (*domain.Cabinet, error) {
-	req := CabinetRequest{ID: &id}
-	return ExecQueryOne[domain.Cabinet](ctx, r.pool, queryCabinetGetByID, req)
+	return ExecQueryOne[domain.Cabinet](ctx, r.pool, queryCabinetGetByID, CabinetRequest{ID: &id})
 }
 
 func (r *CabinetRepo) Update(ctx context.Context, c *domain.Cabinet) error {
-	req := CabinetRequest{
-		ID:          &c.ID,
-		Name:        &c.Name,
-		Description: c.Description,
-		Location:    c.Location,
-		MachineID:   c.MachineID,
-		Status:      c.Status,
-		TeamID:      c.TeamID,
+	val, err := ExecQueryOne[domain.Cabinet](ctx, r.pool, queryCabinetUpdate, NewCabinetRequest(c, nil))
+	if err == nil {
+		*c = *val
 	}
-	val, err := ExecQueryOne[domain.Cabinet](ctx, r.pool, queryCabinetUpdate, req)
-	if err != nil {
-		return err
-	}
-	*c = *val
-	return nil
+	return err
 }
 
 func (r *CabinetRepo) Delete(ctx context.Context, id string) error {
-	req := CabinetRequest{ID: &id}
-	_, err := r.pool.Exec(ctx, queryCabinetDelete, req)
+	_, err := r.pool.Exec(ctx, queryCabinetDelete, CabinetRequest{ID: &id})
 	return err
 }
 
 func (r *CabinetRepo) List(ctx context.Context, limit, offset int) ([]domain.Cabinet, error) {
-	req := CabinetRequest{LimitVal: &limit, OffsetVal: &offset}
-	return ExecQueryList[domain.Cabinet](ctx, r.pool, queryCabinetList, req)
+	return ExecQueryList[domain.Cabinet](ctx, r.pool, queryCabinetList, CabinetRequest{LimitVal: &limit, OffsetVal: &offset})
 }

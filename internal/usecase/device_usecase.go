@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/fayzzzm/go-project/internal/domain"
+	"github.com/fayzzzm/go-project/pkg/utils"
 )
 
 type DeviceServicer interface {
@@ -43,46 +44,15 @@ func NewDeviceUseCase(svc DeviceServicer) *DeviceUseCase {
 }
 
 func (uc *DeviceUseCase) Create(ctx context.Context, input CreateDeviceInput) (*DeviceOutput, error) {
-	var profileID, cabinetID, teamID *string
-	if input.DeviceProfileID != "" {
-		val := input.DeviceProfileID
-		profileID = &val
-	}
-	if input.CabinetID != "" {
-		val := input.CabinetID
-		cabinetID = &val
-	}
-	if input.TeamID != "" {
-		val := input.TeamID
-		teamID = &val
-	}
-
-	// Handle Description and EPC pointers
-	var desc, epc *string
-	if input.Description != "" {
-		val := input.Description
-		desc = &val
-	}
-	if input.EPC != "" {
-		val := input.EPC
-		epc = &val
-	}
-
-	var tenantID *string
-	if input.TenantID != "" {
-		val := input.TenantID
-		tenantID = &val
-	}
-
 	device := &domain.Device{
 		Name:            input.Name,
-		Description:     desc,
+		Description:     utils.StringPtrOrNil(input.Description),
 		SerialNumber:    input.SerialNumber,
-		EPC:             epc,
-		DeviceProfileID: profileID,
-		CabinetID:       cabinetID,
-		TeamID:          teamID,
-		TenantID:        tenantID,
+		EPC:             utils.StringPtrOrNil(input.EPC),
+		DeviceProfileID: utils.StringPtrOrNil(input.DeviceProfileID),
+		CabinetID:       utils.StringPtrOrNil(input.CabinetID),
+		TeamID:          utils.StringPtrOrNil(input.TeamID),
+		TenantID:        utils.StringPtrOrNil(input.TenantID),
 	}
 
 	if err := uc.svc.Create(ctx, device); err != nil {
@@ -102,18 +72,8 @@ func (uc *DeviceUseCase) GetByID(ctx context.Context, id string) (*DeviceOutput,
 }
 
 func (uc *DeviceUseCase) List(ctx context.Context, p domain.Pagination) ([]DeviceOutput, error) {
-	limit := p.Limit
-	offset := p.Offset
-	if limit <= 0 {
-		limit = 100
-	}
-	if limit > 1000 {
-		limit = 1000
-	}
-	if offset < 0 {
-		offset = 0
-	}
-	devices, err := uc.svc.List(ctx, limit, offset)
+	p.Normalize()
+	devices, err := uc.svc.List(ctx, p.Limit, p.Offset)
 	if err != nil {
 		return nil, err
 	}
@@ -139,30 +99,15 @@ func (uc *DeviceUseCase) Update(ctx context.Context, id string, input CreateDevi
 	}
 
 	device.Name = input.Name
-	if input.Description != "" {
-		val := input.Description
-		device.Description = &val
-	}
-	if input.EPC != "" {
-		val := input.EPC
-		device.EPC = &val
-	}
+	device.Description = utils.StringPtrOrNil(input.Description)
+	device.EPC = utils.StringPtrOrNil(input.EPC)
 	if input.SerialNumber != "" {
 		device.SerialNumber = input.SerialNumber
 	}
 
-	if input.DeviceProfileID != "" {
-		val := input.DeviceProfileID
-		device.DeviceProfileID = &val
-	}
-	if input.CabinetID != "" {
-		val := input.CabinetID
-		device.CabinetID = &val
-	}
-	if input.TeamID != "" {
-		val := input.TeamID
-		device.TeamID = &val
-	}
+	device.DeviceProfileID = utils.StringPtrOrNil(input.DeviceProfileID)
+	device.CabinetID = utils.StringPtrOrNil(input.CabinetID)
+	device.TeamID = utils.StringPtrOrNil(input.TeamID)
 
 	if err := uc.svc.Update(ctx, device); err != nil {
 		return nil, err

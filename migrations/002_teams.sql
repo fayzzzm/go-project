@@ -164,3 +164,22 @@ BEGIN
     WHERE m.user_id = p_user_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER STABLE;
+
+-- Update users.list to support filtering by team_id
+-- We consolidate it here because it depends on the teams.members table
+CREATE OR REPLACE FUNCTION users.list(r users.user_request)
+RETURNS SETOF users.user_response AS $$
+BEGIN
+    RETURN QUERY
+    SELECT u.id, u.email, u.name, u.address, u.phone, u.role, u.app_metadata, u.user_metadata, ''::text as password, u.created_at, u.updated_at, u.tenant_id
+    FROM users.user u
+    WHERE u.tenant_id = r.tenant_id
+      AND (r.team_id IS NULL OR EXISTS (
+          SELECT 1 FROM teams.members m WHERE m.user_id = u.id AND m.team_id = r.team_id
+      ))
+    ORDER BY u.created_at DESC
+    LIMIT COALESCE(r.limit_val, 100)
+    OFFSET COALESCE(r.offset_val, 0);
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER STABLE;
+

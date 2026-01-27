@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/fayzzzm/go-project/internal/domain"
+	"github.com/fayzzzm/go-project/pkg/utils"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -16,97 +17,44 @@ func NewUserRepo(pool *pgxpool.Pool) *UserRepo {
 }
 
 const (
-	queryUserCreate      = "SELECT * FROM users.create($1::users.user_request)"
-	queryUserGetByID     = "SELECT * FROM users.get_by_id($1::users.user_request)"
-	queryUserList        = "SELECT * FROM users.list($1::users.user_request)"
-	queryUserUpdate      = "SELECT * FROM users.update($1::users.user_request)"
-	queryUserDelete      = "SELECT * FROM users.delete($1::users.user_request)"
-	queryUserGetByEmail  = "SELECT * FROM users.get_by_email($1::users.user_request)"
+	queryUserCreate  = "SELECT * FROM users.create($1::users.user_request)"
+	queryUserGetByID = "SELECT * FROM users.get_by_id($1::users.user_request)"
+	queryUserList    = "SELECT * FROM users.list($1::users.user_request)"
+	queryUserUpdate  = "SELECT * FROM users.update($1::users.user_request)"
+	queryUserDelete  = "SELECT * FROM users.delete($1::users.user_request)"
+
 	queryUserGetForLogin = "SELECT * FROM users.get_for_login($1::text)"
 )
 
 func (r *UserRepo) Create(ctx context.Context, u *domain.User) error {
-	req := UserRequest{
-		Email:        &u.Email,
-		Name:         u.Name,
-		Address:      u.Address,
-		Phone:        u.Phone,
-		Role:         &u.Role,
-		AppMetadata:  u.AppMetadata,
-		UserMetadata: u.UserMetadata,
-		Password:     &u.Password,
-		TenantID:     &u.TenantID,
+	val, err := ExecQueryOne[domain.User](ctx, r.pool, queryUserCreate, NewUserRequest(u))
+	if err == nil {
+		*u = *val
 	}
-
-	val, err := ExecQueryOne[domain.User](ctx, r.pool, queryUserCreate, req)
-	if err != nil {
-		return err
-	}
-	*u = *val
-	return nil
+	return err
 }
 
 func (r *UserRepo) GetByID(ctx context.Context, id string) (*domain.User, error) {
-	req := UserRequest{ID: &id}
-	return ExecQueryOne[domain.User](ctx, r.pool, queryUserGetByID, req)
+	return ExecQueryOne[domain.User](ctx, r.pool, queryUserGetByID, UserRequest{ID: &id})
 }
 
 func (r *UserRepo) Update(ctx context.Context, u *domain.User) error {
-	var role *string
-	if u.Role != "" {
-		val := u.Role
-		role = &val
+	val, err := ExecQueryOne[domain.User](ctx, r.pool, queryUserUpdate, NewUserRequest(u))
+	if err == nil {
+		*u = *val
 	}
-
-	// AppMetadata and UserMetadata: if nil, likely means "don't update" or "empty"
-	// But JSONB COALESCE default is only if NULL.
-	// We pass them as is. domain.User maps are nil-able.
-
-	var email *string
-	if u.Email != "" {
-		val := u.Email
-		email = &val
-	}
-
-	req := UserRequest{
-		ID:           &u.ID,
-		Name:         u.Name,
-		Address:      u.Address,
-		Phone:        u.Phone,
-		Role:         role,
-		Email:        email,
-		AppMetadata:  u.AppMetadata,
-		UserMetadata: u.UserMetadata,
-	}
-	val, err := ExecQueryOne[domain.User](ctx, r.pool, queryUserUpdate, req)
-	if err != nil {
-		return err
-	}
-	*u = *val
-	return nil
+	return err
 }
 
 func (r *UserRepo) Delete(ctx context.Context, id string) error {
-	req := UserRequest{ID: &id}
-	_, err := r.pool.Exec(ctx, queryUserDelete, req)
+	_, err := r.pool.Exec(ctx, queryUserDelete, UserRequest{ID: &id})
 	return err
 }
 
 func (r *UserRepo) List(ctx context.Context, limit, offset int, teamID, tenantID string) ([]domain.User, error) {
-	var teID, tnID *string
-	if teamID != "" {
-		teID = &teamID
-	}
-	if tenantID != "" {
-		tnID = &tenantID
-	}
-	req := UserRequest{LimitVal: &limit, OffsetVal: &offset, TeamID: teID, TenantID: tnID}
-	return ExecQueryList[domain.User](ctx, r.pool, queryUserList, req)
-}
-
-func (r *UserRepo) GetByEmail(ctx context.Context, email string) (*domain.User, error) {
-	req := UserRequest{Email: &email}
-	return ExecQueryOne[domain.User](ctx, r.pool, queryUserGetByEmail, req)
+	return ExecQueryList[domain.User](ctx, r.pool, queryUserList, UserRequest{
+		LimitVal: &limit, OffsetVal: &offset, TeamID: utils.StringPtrOrNil(teamID), TenantID: utils.StringPtrOrNil(tenantID),
+	})
 }
 
 func (r *UserRepo) GetForLogin(ctx context.Context, email string) (*domain.User, error) {

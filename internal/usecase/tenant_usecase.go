@@ -27,19 +27,8 @@ func NewTenantUseCase(svc TenantServicer) *TenantUseCase {
 }
 
 func (uc *TenantUseCase) List(ctx context.Context, p domain.Pagination) ([]TenantOutput, error) {
-	limit := p.Limit
-	offset := p.Offset
-	if limit <= 0 {
-		limit = 100
-	}
-	if limit > 1000 {
-		limit = 1000
-	}
-	if offset < 0 {
-		offset = 0
-	}
-
-	tenants, err := uc.svc.List(ctx, limit, offset)
+	p.Normalize()
+	tenants, err := uc.svc.List(ctx, p.Limit, p.Offset)
 	if err != nil {
 		return nil, err
 	}

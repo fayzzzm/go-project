@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/fayzzzm/go-project/internal/domain"
+	"github.com/fayzzzm/go-project/pkg/utils"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -89,18 +90,8 @@ func (uc *UserUseCase) GetByID(ctx context.Context, id string) (*UserOutput, err
 }
 
 func (uc *UserUseCase) List(ctx context.Context, p domain.Pagination, teamID, tenantID string) ([]UserOutput, error) {
-	limit := p.Limit
-	offset := p.Offset
-	if limit <= 0 {
-		limit = 100
-	}
-	if limit > 1000 {
-		limit = 1000
-	}
-	if offset < 0 {
-		offset = 0
-	}
-	users, err := uc.svc.List(ctx, limit, offset, teamID, tenantID)
+	p.Normalize()
+	users, err := uc.svc.List(ctx, p.Limit, p.Offset, teamID, tenantID)
 	if err != nil {
 		return nil, err
 	}
@@ -113,27 +104,14 @@ func (uc *UserUseCase) List(ctx context.Context, p domain.Pagination, teamID, te
 }
 
 func (uc *UserUseCase) Update(ctx context.Context, id string, input UpdateUserInput) (*UserOutput, error) {
-	// Direct Partial Update via Repository
-	// DB handles COALESCE logic (only update fields that are present/non-nil)
 	user := &domain.User{
-		ID: id,
+		ID:      id,
+		Name:    utils.StringPtrOrNil(input.Name),
+		Address: utils.StringPtrOrNil(input.Address),
+		Phone:   utils.StringPtrOrNil(input.Phone),
+		Email:   input.Email,
 	}
 
-	if input.Name != "" {
-		user.Name = &input.Name
-	}
-	if input.Address != "" {
-		user.Address = &input.Address
-	}
-	if input.Phone != "" {
-		user.Phone = &input.Phone
-	}
-	if input.Email != "" {
-		user.Email = input.Email
-	}
-	// AppMetadata/UserMetadata handling... (omitted for brevity, can add if needed)
-
-	// Update returns the updated user state from DB (RETURNING *)
 	if err := uc.svc.Update(ctx, user); err != nil {
 		return nil, err
 	}

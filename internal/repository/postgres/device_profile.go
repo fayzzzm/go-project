@@ -24,46 +24,30 @@ const (
 )
 
 func (r *DeviceProfileRepo) Create(ctx context.Context, dp *domain.DeviceProfile) error {
-	req := DeviceProfileRequest{
-		Name:        &dp.Name,
-		Description: dp.Description,
-		TenantID:    dp.TenantID,
+	val, err := ExecQueryOne[domain.DeviceProfile](ctx, r.pool, queryDeviceProfileCreate, NewDeviceProfileRequest(dp))
+	if err == nil {
+		*dp = *val
 	}
-
-	val, err := ExecQueryOne[domain.DeviceProfile](ctx, r.pool, queryDeviceProfileCreate, req)
-	if err != nil {
-		return err
-	}
-	*dp = *val
-	return nil
+	return err
 }
 
 func (r *DeviceProfileRepo) GetByID(ctx context.Context, id string) (*domain.DeviceProfile, error) {
-	req := DeviceProfileRequest{ID: &id}
-	return ExecQueryOne[domain.DeviceProfile](ctx, r.pool, queryDeviceProfileGetByID, req)
+	return ExecQueryOne[domain.DeviceProfile](ctx, r.pool, queryDeviceProfileGetByID, DeviceProfileRequest{ID: &id})
 }
 
 func (r *DeviceProfileRepo) Update(ctx context.Context, dp *domain.DeviceProfile) error {
-	req := DeviceProfileRequest{
-		ID:          &dp.ID,
-		Name:        &dp.Name,
-		Description: dp.Description,
+	val, err := ExecQueryOne[domain.DeviceProfile](ctx, r.pool, queryDeviceProfileUpdate, NewDeviceProfileRequest(dp))
+	if err == nil {
+		*dp = *val
 	}
-	val, err := ExecQueryOne[domain.DeviceProfile](ctx, r.pool, queryDeviceProfileUpdate, req)
-	if err != nil {
-		return err
-	}
-	*dp = *val
-	return nil
+	return err
 }
 
 func (r *DeviceProfileRepo) Delete(ctx context.Context, id string) error {
-	req := DeviceProfileRequest{ID: &id}
-	_, err := r.pool.Exec(ctx, queryDeviceProfileDelete, req)
+	_, err := r.pool.Exec(ctx, queryDeviceProfileDelete, DeviceProfileRequest{ID: &id})
 	return err
 }
 
 func (r *DeviceProfileRepo) List(ctx context.Context, limit, offset int) ([]domain.DeviceProfile, error) {
-	req := DeviceProfileRequest{LimitVal: &limit, OffsetVal: &offset}
-	return ExecQueryList[domain.DeviceProfile](ctx, r.pool, queryDeviceProfileList, req)
+	return ExecQueryList[domain.DeviceProfile](ctx, r.pool, queryDeviceProfileList, DeviceProfileRequest{LimitVal: &limit, OffsetVal: &offset})
 }

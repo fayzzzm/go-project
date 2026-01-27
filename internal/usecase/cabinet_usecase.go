@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/fayzzzm/go-project/internal/domain"
+	"github.com/fayzzzm/go-project/pkg/utils"
 )
 
 type CabinetServicer interface {
@@ -44,20 +45,10 @@ func NewCabinetUseCase(svc CabinetServicer) *CabinetUseCase {
 }
 
 func (uc *CabinetUseCase) Create(ctx context.Context, input CreateCabinetInput, userID string) (*CabinetOutput, error) {
-	var location, teamID *string
-	if input.Location != "" {
-		val := input.Location
-		location = &val
-	}
-	if input.TeamID != "" {
-		val := input.TeamID
-		teamID = &val
-	}
-
 	cabinet := &domain.Cabinet{
 		Name:     input.Name,
-		Location: location,
-		TeamID:   teamID,
+		Location: utils.StringPtrOrNil(input.Location),
+		TeamID:   utils.StringPtrOrNil(input.TeamID),
 	}
 
 	if err := uc.svc.Create(ctx, cabinet, userID); err != nil {
@@ -76,18 +67,8 @@ func (uc *CabinetUseCase) GetByID(ctx context.Context, id string) (*CabinetOutpu
 }
 
 func (uc *CabinetUseCase) List(ctx context.Context, p domain.Pagination) ([]CabinetOutput, error) {
-	limit := p.Limit
-	offset := p.Offset
-	if limit <= 0 {
-		limit = 100
-	}
-	if limit > 1000 {
-		limit = 1000
-	}
-	if offset < 0 {
-		offset = 0
-	}
-	cabinets, err := uc.svc.List(ctx, limit, offset)
+	p.Normalize()
+	cabinets, err := uc.svc.List(ctx, p.Limit, p.Offset)
 	if err != nil {
 		return nil, err
 	}
@@ -101,18 +82,10 @@ func (uc *CabinetUseCase) List(ctx context.Context, p domain.Pagination) ([]Cabi
 
 func (uc *CabinetUseCase) Update(ctx context.Context, id string, input UpdateCabinetInput) (*CabinetOutput, error) {
 	cabinet := &domain.Cabinet{
-		ID: id,
-	}
-	if input.Name != "" {
-		cabinet.Name = input.Name
-	}
-	if input.Location != "" {
-		val := input.Location
-		cabinet.Location = &val
-	}
-	if input.TeamID != "" {
-		val := input.TeamID
-		cabinet.TeamID = &val
+		ID:       id,
+		Name:     input.Name,
+		Location: utils.StringPtrOrNil(input.Location),
+		TeamID:   utils.StringPtrOrNil(input.TeamID),
 	}
 
 	if err := uc.svc.Update(ctx, cabinet); err != nil {
@@ -126,18 +99,10 @@ func (uc *CabinetUseCase) Delete(ctx context.Context, id string) error {
 }
 
 func toCabinetOutput(c *domain.Cabinet) *CabinetOutput {
-	location := ""
-	if c.Location != nil {
-		location = *c.Location
-	}
-	teamID := ""
-	if c.TeamID != nil {
-		teamID = *c.TeamID
-	}
 	return &CabinetOutput{
 		ID:       c.ID,
 		Name:     c.Name,
-		Location: location,
-		TeamID:   teamID,
+		Location: utils.StringValue(c.Location),
+		TeamID:   utils.StringValue(c.TeamID),
 	}
 }

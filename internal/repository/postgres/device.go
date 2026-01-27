@@ -27,82 +27,46 @@ const (
 )
 
 func (r *DeviceRepo) Create(ctx context.Context, d *domain.Device) error {
-	req := DeviceRequest{
-		Name:            &d.Name,
-		Description:     d.Description,
-		SerialNumber:    &d.SerialNumber,
-		EPC:             d.EPC,
-		DeviceProfileID: d.DeviceProfileID,
-		CabinetID:       d.CabinetID,
-		TeamID:          d.TeamID,
-		TenantID:        d.TenantID,
+	val, err := ExecQueryOne[domain.Device](ctx, r.pool, queryDeviceCreate, NewDeviceRequest(d))
+	if err == nil {
+		*d = *val
 	}
-	val, err := ExecQueryOne[domain.Device](ctx, r.pool, queryDeviceCreate, req)
-	if err != nil {
-		return err
-	}
-	*d = *val
-	return nil
+	return err
 }
 
 func (r *DeviceRepo) GetByID(ctx context.Context, id string) (*domain.Device, error) {
-	req := DeviceRequest{ID: &id}
-	return ExecQueryOne[domain.Device](ctx, r.pool, queryDeviceGetByID, req)
+	return ExecQueryOne[domain.Device](ctx, r.pool, queryDeviceGetByID, DeviceRequest{ID: &id})
 }
 
 func (r *DeviceRepo) Update(ctx context.Context, d *domain.Device) error {
-	req := DeviceRequest{
-		ID:              &d.ID,
-		Name:            &d.Name,
-		Description:     d.Description,
-		SerialNumber:    &d.SerialNumber,
-		EPC:             d.EPC,
-		DeviceProfileID: d.DeviceProfileID,
-		CabinetID:       d.CabinetID,
-		TeamID:          d.TeamID,
-		TenantID:        d.TenantID,
+	val, err := ExecQueryOne[domain.Device](ctx, r.pool, queryDeviceUpdate, NewDeviceRequest(d))
+	if err == nil {
+		*d = *val
 	}
-	val, err := ExecQueryOne[domain.Device](ctx, r.pool, queryDeviceUpdate, req)
-	if err != nil {
-		return err
-	}
-	*d = *val
-	return nil
+	return err
 }
 
 func (r *DeviceRepo) Delete(ctx context.Context, id string) error {
-	req := DeviceRequest{ID: &id}
-	_, err := r.pool.Exec(ctx, queryDeviceDelete, req)
+	_, err := r.pool.Exec(ctx, queryDeviceDelete, DeviceRequest{ID: &id})
 	return err
 }
 
 func (r *DeviceRepo) List(ctx context.Context, limit, offset int) ([]domain.Device, error) {
-	req := DeviceRequest{LimitVal: &limit, OffsetVal: &offset}
-	return ExecQueryList[domain.Device](ctx, r.pool, queryDeviceList, req)
+	return ExecQueryList[domain.Device](ctx, r.pool, queryDeviceList, DeviceRequest{LimitVal: &limit, OffsetVal: &offset})
 }
 
 func (r *DeviceRepo) GetBySerialNumber(ctx context.Context, serialNumber string) (*domain.Device, error) {
-	req := DeviceRequest{SerialNumber: &serialNumber}
-	return ExecQueryOne[domain.Device](ctx, r.pool, queryDeviceGetBySerialNumber, req)
+	return ExecQueryOne[domain.Device](ctx, r.pool, queryDeviceGetBySerialNumber, DeviceRequest{SerialNumber: &serialNumber})
 }
 
 func (r *DeviceRepo) GetByEPC(ctx context.Context, epc string) (*domain.Device, error) {
-	req := DeviceRequest{EPC: &epc}
-	return ExecQueryOne[domain.Device](ctx, r.pool, queryDeviceGetByEPC, req)
+	return ExecQueryOne[domain.Device](ctx, r.pool, queryDeviceGetByEPC, DeviceRequest{EPC: &epc})
 }
 
 func (r *DeviceRepo) BulkCreate(ctx context.Context, devices []domain.Device) error {
 	requests := make([]DeviceRequest, len(devices))
 	for i, d := range devices {
-		requests[i] = DeviceRequest{
-			Name:            &d.Name,
-			Description:     d.Description,
-			SerialNumber:    &d.SerialNumber,
-			EPC:             d.EPC,
-			DeviceProfileID: d.DeviceProfileID,
-			CabinetID:       d.CabinetID,
-			TeamID:          d.TeamID,
-		}
+		requests[i] = NewDeviceRequest(&d)
 	}
 	_, err := r.pool.Exec(ctx, queryDeviceBulkCreate, requests)
 	return err

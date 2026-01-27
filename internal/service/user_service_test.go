@@ -29,11 +29,6 @@ func (m *MockUserRepository) List(ctx context.Context, limit, offset int, teamID
 	return args.Get(0).([]domain.User), args.Error(1)
 }
 
-func (m *MockUserRepository) GetByEmail(ctx context.Context, email string) (*domain.User, error) {
-	args := m.Called(ctx, email)
-	return args.Get(0).(*domain.User), args.Error(1)
-}
-
 func (m *MockUserRepository) Update(ctx context.Context, u *domain.User) error {
 	args := m.Called(ctx, u)
 	return args.Error(0)
