@@ -6,6 +6,7 @@ import (
 
 	"github.com/fayzzzm/go-project/internal/middleware"
 	"github.com/fayzzzm/go-project/internal/usecase"
+	"github.com/fayzzzm/go-project/pkg/utils"
 	"github.com/gin-gonic/gin"
 )
 
@@ -26,11 +27,11 @@ func NewDeviceProfileController(r gin.IRouter, uc DeviceProfileUseCase) {
 
 	dps := r.Group("/device_profiles")
 	{
-		dps.POST("", middleware.BindJSON[usecase.CreateDeviceProfileInput](), Handle(c.Create, http.StatusCreated))
-		dps.GET("", Handle(c.List, http.StatusOK))
-		dps.GET("/:id", Handle(c.GetByID, http.StatusOK))
-		dps.PUT("/:id", middleware.BindJSON[usecase.UpdateDeviceProfileInput](), Handle(c.Update, http.StatusOK))
-		dps.DELETE("/:id", Handle(c.Delete, http.StatusNoContent))
+		dps.POST("", middleware.BindJSON[usecase.CreateDeviceProfileInput](), utils.Handle(c.Create, http.StatusCreated))
+		dps.GET("", utils.Handle(c.List, http.StatusOK))
+		dps.GET("/:id", utils.Handle(c.GetByID, http.StatusOK))
+		dps.PUT("/:id", middleware.BindJSON[usecase.UpdateDeviceProfileInput](), utils.Handle(c.Update, http.StatusOK))
+		dps.DELETE("/:id", utils.Handle(c.Delete, http.StatusNoContent))
 	}
 }
 

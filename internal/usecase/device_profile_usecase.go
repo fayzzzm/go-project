@@ -16,9 +16,9 @@ type DeviceProfileServicer interface {
 }
 
 type CreateDeviceProfileInput struct {
-	Name        string `json:"name"`
+	Name        string `json:"name" binding:"required"`
 	Description string `json:"description"`
-	TenantID    string `json:"tenant_id"`
+	TenantID    string `json:"tenant_id" binding:"required,uuid"`
 }
 
 type UpdateDeviceProfileInput struct {

@@ -6,6 +6,7 @@ import (
 
 	"github.com/fayzzzm/go-project/internal/middleware"
 	"github.com/fayzzzm/go-project/internal/usecase"
+	"github.com/fayzzzm/go-project/pkg/utils"
 	"github.com/gin-gonic/gin"
 )
 
@@ -26,11 +27,11 @@ func NewTeamController(r gin.IRouter, uc TeamUseCase) {
 
 	teams := r.Group("/teams")
 	{
-		teams.POST("", middleware.BindJSON[usecase.CreateTeamInput](), Handle(c.Create, http.StatusCreated))
-		teams.GET("", Handle(c.List, http.StatusOK))
-		teams.GET("/:id", Handle(c.GetByID, http.StatusOK))
-		teams.PUT("/:id", middleware.BindJSON[usecase.UpdateTeamInput](), Handle(c.Update, http.StatusOK))
-		teams.DELETE("/:id", Handle(c.Delete, http.StatusNoContent))
+		teams.POST("", middleware.BindJSON[usecase.CreateTeamInput](), utils.Handle(c.Create, http.StatusCreated))
+		teams.GET("", utils.Handle(c.List, http.StatusOK))
+		teams.GET("/:id", utils.Handle(c.GetByID, http.StatusOK))
+		teams.PUT("/:id", middleware.BindJSON[usecase.UpdateTeamInput](), utils.Handle(c.Update, http.StatusOK))
+		teams.DELETE("/:id", utils.Handle(c.Delete, http.StatusNoContent))
 	}
 }
 

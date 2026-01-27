@@ -16,9 +16,9 @@ type TeamServicer interface {
 }
 
 type CreateTeamInput struct {
-	Name     string `json:"name"`
+	Name     string `json:"name" binding:"required"`
 	Status   string `json:"status"`
-	TenantID string `json:"tenant_id"`
+	TenantID string `json:"tenant_id" binding:"required,uuid"`
 }
 
 type UpdateTeamInput struct {

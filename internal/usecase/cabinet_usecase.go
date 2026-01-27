@@ -15,15 +15,15 @@ type CabinetServicer interface {
 }
 
 type CreateCabinetInput struct {
-	Name     string `json:"name"`
+	Name     string `json:"name" binding:"required"`
 	Location string `json:"location"`
-	TeamID   string `json:"team_id"`
+	TeamID   string `json:"team_id" binding:"required,uuid"`
 }
 
 type UpdateCabinetInput struct {
 	Name     string `json:"name"`
 	Location string `json:"location"`
-	TeamID   string `json:"team_id"`
+	TeamID   string `json:"team_id" binding:"omitempty,uuid"`
 }
 
 type CabinetOutput struct {

@@ -6,6 +6,7 @@ import (
 
 	"github.com/fayzzzm/go-project/internal/middleware"
 	"github.com/fayzzzm/go-project/internal/usecase"
+	"github.com/fayzzzm/go-project/pkg/utils"
 	"github.com/gin-gonic/gin"
 )
 
@@ -26,11 +27,11 @@ func NewCabinetController(r gin.IRouter, uc CabinetUseCase) {
 
 	cabinets := r.Group("/cabinets")
 	{
-		cabinets.POST("", middleware.BindJSON[usecase.CreateCabinetInput](), Handle(c.Create, http.StatusCreated))
-		cabinets.GET("", Handle(c.List, http.StatusOK))
-		cabinets.GET("/:id", Handle(c.GetByID, http.StatusOK))
-		cabinets.PUT("/:id", middleware.BindJSON[usecase.UpdateCabinetInput](), Handle(c.Update, http.StatusOK))
-		cabinets.DELETE("/:id", Handle(c.Delete, http.StatusNoContent))
+		cabinets.POST("", middleware.BindJSON[usecase.CreateCabinetInput](), utils.Handle(c.Create, http.StatusCreated))
+		cabinets.GET("", utils.Handle(c.List, http.StatusOK))
+		cabinets.GET("/:id", utils.Handle(c.GetByID, http.StatusOK))
+		cabinets.PUT("/:id", middleware.BindJSON[usecase.UpdateCabinetInput](), utils.Handle(c.Update, http.StatusOK))
+		cabinets.DELETE("/:id", utils.Handle(c.Delete, http.StatusNoContent))
 	}
 }
 

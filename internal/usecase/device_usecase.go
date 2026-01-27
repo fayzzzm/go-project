@@ -16,23 +16,14 @@ type DeviceServicer interface {
 }
 
 type CreateDeviceInput struct {
-	Name            string `json:"name"`
+	Name            string `json:"name" binding:"required"`
 	Description     string `json:"description"`
-	SerialNumber    string `json:"serial_number"`
+	SerialNumber    string `json:"serial_number" binding:"required"`
 	EPC             string `json:"epc"`
 	DeviceProfileID string `json:"device_profile_id"`
 	CabinetID       string `json:"cabinet_id"`
 	TeamID          string `json:"team_id"`
-	TenantID        string `json:"tenant_id"`
-}
-
-func (i CreateDeviceInput) Validate() (bool, string) {
-	d := domain.Device{
-		Name:         i.Name,
-		SerialNumber: i.SerialNumber,
-		TenantID:     i.TenantID,
-	}
-	return d.Validate()
+	TenantID        string `json:"tenant_id" binding:"required,uuid"`
 }
 
 type DeviceOutput struct {

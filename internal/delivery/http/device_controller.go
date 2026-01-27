@@ -6,6 +6,7 @@ import (
 
 	"github.com/fayzzzm/go-project/internal/middleware"
 	"github.com/fayzzzm/go-project/internal/usecase"
+	"github.com/fayzzzm/go-project/pkg/utils"
 	"github.com/gin-gonic/gin"
 )
 
@@ -24,9 +25,9 @@ func NewDeviceController(r gin.IRouter, uc DeviceUseCase) {
 
 	devices := r.Group("/devices")
 	{
-		devices.POST("", middleware.BindJSON[usecase.CreateDeviceInput](), Handle(c.Create, http.StatusCreated))
-		devices.GET("/:id", Handle(c.GetByID, http.StatusOK))
-		devices.GET("", Handle(c.List, http.StatusOK))
+		devices.POST("", middleware.BindJSON[usecase.CreateDeviceInput](), utils.Handle(c.Create, http.StatusCreated))
+		devices.GET("/:id", utils.Handle(c.GetByID, http.StatusOK))
+		devices.GET("", utils.Handle(c.List, http.StatusOK))
 	}
 }
 

@@ -6,6 +6,7 @@ import (
 
 	"github.com/fayzzzm/go-project/internal/middleware"
 	"github.com/fayzzzm/go-project/internal/usecase"
+	"github.com/fayzzzm/go-project/pkg/utils"
 	"github.com/gin-gonic/gin"
 )
 
@@ -26,11 +27,11 @@ func NewUserController(r gin.IRouter, uc UserUseCase) {
 
 	users := r.Group("/users")
 	{
-		users.POST("", middleware.BindJSON[usecase.CreateUserInput](), Handle(c.Create, http.StatusCreated))
-		users.GET("", Handle(c.List, http.StatusOK))
-		users.GET("/:id", Handle(c.GetByID, http.StatusOK))
-		users.PUT("/:id", middleware.BindJSON[usecase.UpdateUserInput](), Handle(c.Update, http.StatusOK))
-		users.DELETE("/:id", Handle(c.Delete, http.StatusNoContent))
+		users.POST("", middleware.BindJSON[usecase.CreateUserInput](), utils.Handle(c.Create, http.StatusCreated))
+		users.GET("", utils.Handle(c.List, http.StatusOK))
+		users.GET("/:id", utils.Handle(c.GetByID, http.StatusOK))
+		users.PUT("/:id", middleware.BindJSON[usecase.UpdateUserInput](), utils.Handle(c.Update, http.StatusOK))
+		users.DELETE("/:id", utils.Handle(c.Delete, http.StatusNoContent))
 	}
 }
 

@@ -15,20 +15,12 @@ type UserServicer interface {
 }
 
 type CreateUserInput struct {
-	Email        string                 `json:"email"`
-	Name         string                 `json:"name"`
+	Email        string                 `json:"email" binding:"required,email"`
+	Name         string                 `json:"name" binding:"required"`
 	Address      string                 `json:"address"`
 	Phone        string                 `json:"phone"`
 	AppMetadata  map[string]interface{} `json:"app_metadata"`
 	UserMetadata map[string]interface{} `json:"user_metadata"`
-}
-
-func (i CreateUserInput) Validate() (bool, string) {
-	u := domain.User{
-		Email: i.Email,
-		Name:  &i.Name,
-	}
-	return u.Validate()
 }
 
 type UpdateUserInput struct {
@@ -38,10 +30,6 @@ type UpdateUserInput struct {
 	Phone        string                 `json:"phone"`
 	AppMetadata  map[string]interface{} `json:"app_metadata"`
 	UserMetadata map[string]interface{} `json:"user_metadata"`
-}
-
-func (i UpdateUserInput) Validate() (bool, string) {
-	return true, ""
 }
 
 type UserOutput struct {

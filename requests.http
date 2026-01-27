@@ -1,6 +1,6 @@
 @baseUrl = http://localhost:8080/api/v1
 @tenantId = tenant_001
-@createdUserId = 92225d7b-d62e-4807-93f7-111c3719de02
+@createdUserId = eb068dc9-0193-44db-90f3-59bfb6d1a872
 @createdDeviceId = {{createDevice.response.body.id}}
 @createdCabinetId = ca6289ef-0f98-49a5-95dc-0ff71a8304af
 @createdTeamId = f400d061-65c2-475b-a4be-680dd754910e
