@@ -7,7 +7,7 @@
 @createdProfileId = {{paste_profile_id}}
 
 @password = secret_Pass123!
-@authToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImRldmVsb3BlcjFAaXRzd2FyZS5jb20iLCJleHAiOjE3Njk2MjYzMDksInJvbGUiOiIiLCJzdWIiOiIyZTU0MDNlYi1hMzRhLTQyZDItODU1Zi1mNjQxMzliMjE0YmIiLCJ0ZW5hbnRfaWQiOiJhMGVlYmM5OS05YzBiLTRlZjgtYmI2ZC02YmI5YmQzODBhMTEifQ.v8TcsxJwEq-1dJf8Yfwl1htoDrxAxqzpGQDZa2gOUCI
+@authToken = {{paste_auth_token}}
 
 ### ============================================================================
 ### TENANTS
@@ -121,8 +121,8 @@ X-Tenant-ID: {{tenantId}}
     "role": "admin"
 }
 
-### 10. List Users by Team
-GET {{baseUrl}}/users?team_id={{createdTeamId}}
+### 10. List Teams for User
+GET {{baseUrl}}/teams?user_id={{createdUserId}}
 Content-Type: application/json
 Authorization: Bearer {{authToken}}
 X-Tenant-ID: {{tenantId}}

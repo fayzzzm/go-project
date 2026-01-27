@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/fayzzzm/go-project/internal/domain"
 	"github.com/fayzzzm/go-project/internal/middleware"
 	"github.com/fayzzzm/go-project/internal/usecase"
 	"github.com/fayzzzm/go-project/pkg/utils"
@@ -13,7 +14,7 @@ import (
 type DeviceUseCase interface {
 	Create(ctx context.Context, input usecase.CreateDeviceInput) (*usecase.DeviceOutput, error)
 	GetByID(ctx context.Context, id string) (*usecase.DeviceOutput, error)
-	List(ctx context.Context, limit, offset int) ([]usecase.DeviceOutput, error)
+	List(ctx context.Context, p domain.Pagination) ([]usecase.DeviceOutput, error)
 	Update(ctx context.Context, id string, input usecase.CreateDeviceInput) (*usecase.DeviceOutput, error)
 	Delete(ctx context.Context, id, tenantID string) error
 }
@@ -37,31 +38,21 @@ func NewDeviceController(r gin.IRouter, uc DeviceUseCase) {
 }
 
 func (c *DeviceController) Create(ctx *gin.Context) (any, error) {
-	input := middleware.GetBody[usecase.CreateDeviceInput](ctx)
-	input.TenantID = middleware.GetTenantID(ctx)
-	return c.uc.Create(ctx.Request.Context(), input)
+	return c.uc.Create(ctx.Request.Context(), middleware.GetBody[usecase.CreateDeviceInput](ctx))
 }
 
 func (c *DeviceController) GetByID(ctx *gin.Context) (any, error) {
-	id := ctx.Param("id")
-	return c.uc.GetByID(ctx.Request.Context(), id)
+	return c.uc.GetByID(ctx.Request.Context(), ctx.Param("id"))
 }
 
 func (c *DeviceController) List(ctx *gin.Context) (any, error) {
-	limit, offset := middleware.GetPagination(ctx)
-	return c.uc.List(ctx.Request.Context(), limit, offset)
+	return c.uc.List(ctx.Request.Context(), middleware.GetPagination(ctx))
 }
 
 func (c *DeviceController) Update(ctx *gin.Context) (any, error) {
-	id := ctx.Param("id")
-	input := middleware.GetBody[usecase.CreateDeviceInput](ctx)
-	input.TenantID = middleware.GetTenantID(ctx)
-	return c.uc.Update(ctx.Request.Context(), id, input)
+	return c.uc.Update(ctx.Request.Context(), ctx.Param("id"), middleware.GetBody[usecase.CreateDeviceInput](ctx))
 }
 
 func (c *DeviceController) Delete(ctx *gin.Context) (any, error) {
-	id := ctx.Param("id")
-	tenantID := middleware.GetTenantID(ctx)
-	err := c.uc.Delete(ctx.Request.Context(), id, tenantID)
-	return nil, err
+	return nil, c.uc.Delete(ctx.Request.Context(), ctx.Param("id"), middleware.GetTenantID(ctx))
 }

@@ -20,8 +20,13 @@ func BindJSON[T any]() gin.HandlerFunc {
 			return
 		}
 
-		// Inject X-Tenant-ID if struct has TenantID field and header is present
-		if tenantID := c.GetHeader("X-Tenant-ID"); tenantID != "" {
+		// Inject TenantID: Check Context (Auth) first, then Header
+		tenantID := c.GetString(ContextTenantID)
+		if tenantID == "" {
+			tenantID = c.GetHeader("X-Tenant-ID")
+		}
+
+		if tenantID != "" {
 			val := reflect.ValueOf(&input).Elem()
 			if val.Kind() == reflect.Struct {
 				field := val.FieldByName("TenantID")

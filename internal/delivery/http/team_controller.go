@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/fayzzzm/go-project/internal/domain"
 	"github.com/fayzzzm/go-project/internal/middleware"
 	"github.com/fayzzzm/go-project/internal/usecase"
 	"github.com/fayzzzm/go-project/pkg/utils"
@@ -13,7 +14,8 @@ import (
 type TeamUseCase interface {
 	Create(ctx context.Context, input usecase.CreateTeamInput) (*usecase.TeamOutput, error)
 	GetByID(ctx context.Context, id string) (*usecase.TeamOutput, error)
-	List(ctx context.Context, limit, offset int, tenantID, userID string) ([]usecase.TeamOutput, error)
+	List(ctx context.Context, p domain.Pagination, tenantID, userID string) ([]usecase.TeamOutput, error)
+	ListForUser(ctx context.Context, userID string) ([]usecase.TeamOutput, error)
 	Update(ctx context.Context, id string, input usecase.UpdateTeamInput) (*usecase.TeamOutput, error)
 	Delete(ctx context.Context, id string) error
 	AddMember(ctx context.Context, teamID string, input usecase.AddMemberInput) (*usecase.MemberOutput, error)
@@ -39,37 +41,28 @@ func NewTeamController(r gin.IRouter, uc TeamUseCase) {
 }
 
 func (c *TeamController) Create(ctx *gin.Context) (any, error) {
-	input := middleware.GetBody[usecase.CreateTeamInput](ctx)
-	return c.uc.Create(ctx.Request.Context(), input)
+	return c.uc.Create(ctx.Request.Context(), middleware.GetBody[usecase.CreateTeamInput](ctx))
 }
 
 func (c *TeamController) GetByID(ctx *gin.Context) (any, error) {
-	id := ctx.Param("id")
-	return c.uc.GetByID(ctx.Request.Context(), id)
+	return c.uc.GetByID(ctx.Request.Context(), ctx.Param("id"))
 }
 
 func (c *TeamController) List(ctx *gin.Context) (any, error) {
-	limit, offset := middleware.GetPagination(ctx)
-	tenantID := middleware.GetTenantID(ctx)
-	userID, _ := middleware.GetUserID(ctx)
-
-	return c.uc.List(ctx.Request.Context(), limit, offset, tenantID, userID)
+	if filterUserID := ctx.Query("user_id"); filterUserID != "" {
+		return c.uc.ListForUser(ctx.Request.Context(), filterUserID)
+	}
+	return c.uc.List(ctx.Request.Context(), middleware.GetPagination(ctx), middleware.GetTenantID(ctx), ctx.GetString(middleware.ContextUserID))
 }
 
 func (c *TeamController) Update(ctx *gin.Context) (any, error) {
-	id := ctx.Param("id")
-	input := middleware.GetBody[usecase.UpdateTeamInput](ctx)
-	return c.uc.Update(ctx.Request.Context(), id, input)
+	return c.uc.Update(ctx.Request.Context(), ctx.Param("id"), middleware.GetBody[usecase.UpdateTeamInput](ctx))
 }
 
 func (c *TeamController) Delete(ctx *gin.Context) (any, error) {
-	id := ctx.Param("id")
-	err := c.uc.Delete(ctx.Request.Context(), id)
-	return nil, err
+	return nil, c.uc.Delete(ctx.Request.Context(), ctx.Param("id"))
 }
 
 func (c *TeamController) AddMember(ctx *gin.Context) (any, error) {
-	id := ctx.Param("id")
-	input := middleware.GetBody[usecase.AddMemberInput](ctx)
-	return c.uc.AddMember(ctx.Request.Context(), id, input)
+	return c.uc.AddMember(ctx.Request.Context(), ctx.Param("id"), middleware.GetBody[usecase.AddMemberInput](ctx))
 }

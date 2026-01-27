@@ -6,6 +6,7 @@ import (
 
 	"github.com/fayzzzm/go-project/internal/domain"
 	"github.com/gin-gonic/gin"
+	"github.com/jackc/pgx/v5/pgconn"
 )
 
 // ErrorHandlerMiddleware intercepts errors attached to the context and sends generic JSON responses.
@@ -36,11 +37,25 @@ func ErrorHandlerMiddleware() gin.HandlerFunc {
 				statusCode = http.StatusUnauthorized
 				message = err.Error()
 			default:
-				// Log the actual error for debugging
-				// TODO: Use a proper logger
-				println("Internal Server Error:", err.Error())
-				statusCode = http.StatusInternalServerError
-				message = "internal server error"
+				// Handle Postgres custom errors
+				var pgErr *pgconn.PgError
+				if errors.As(err, &pgErr) {
+					if pgErr.Code == "P0001" {
+						statusCode = http.StatusForbidden
+						message = pgErr.Message
+					} else {
+						// Log other DB errors
+						println("DB Error:", pgErr.Error())
+						statusCode = http.StatusInternalServerError
+						message = "internal server error"
+					}
+				} else {
+					// Log the actual error for debugging
+					// TODO: Use a proper logger
+					println("Internal Server Error:", err.Error())
+					statusCode = http.StatusInternalServerError
+					message = "internal server error"
+				}
 			}
 
 			// If status is already written, we can't do anything (rare)

@@ -16,13 +16,14 @@ func NewTeamRepo(pool *pgxpool.Pool) *TeamRepo {
 }
 
 const (
-	queryTeamCreate    = "SELECT * FROM teams.create($1::teams.team_request)"
-	queryTeamGetByID   = "SELECT * FROM teams.get_by_id($1::teams.team_request)"
-	queryTeamList      = "SELECT * FROM teams.list($1::teams.team_request)"
-	queryTeamUpdate    = "SELECT * FROM teams.update($1::teams.team_request)"
-	queryTeamDelete    = "SELECT * FROM teams.delete($1::teams.team_request)"
-	queryTeamAddMember = "SELECT * FROM teams.add_member($1::teams.member_request)"
-	queryTeamIsMember  = "SELECT EXISTS(SELECT 1 FROM teams.members WHERE team_id=$1::uuid AND user_id=$2::uuid)"
+	queryTeamCreate     = "SELECT * FROM teams.create($1::teams.team_request)"
+	queryTeamGetByID    = "SELECT * FROM teams.get_by_id($1::teams.team_request)"
+	queryTeamList       = "SELECT * FROM teams.list($1::teams.team_request)"
+	queryTeamUpdate     = "SELECT * FROM teams.update($1::teams.team_request)"
+	queryTeamDelete     = "SELECT * FROM teams.delete($1::teams.team_request)"
+	queryTeamAddMember  = "SELECT * FROM teams.add_member($1::teams.member_request)"
+	queryTeamIsMember   = "SELECT EXISTS(SELECT 1 FROM teams.members WHERE team_id=$1::uuid AND user_id=$2::uuid)"
+	queryTeamGetForUser = "SELECT * FROM teams.get_for_user($1::uuid)"
 )
 
 func (r *TeamRepo) IsMember(ctx context.Context, teamID, userID string) (bool, error) {
@@ -91,4 +92,32 @@ func (r *TeamRepo) List(ctx context.Context, limit, offset int, tenantID, userID
 	}
 	req := TeamRequest{LimitVal: &limit, OffsetVal: &offset, TenantID: tID, UserID: uID}
 	return ExecQueryList[domain.Team](ctx, r.pool, queryTeamList, req)
+}
+
+func (r *TeamRepo) GetForUser(ctx context.Context, userID string) ([]domain.Team, error) {
+	rows, err := r.pool.Query(ctx, queryTeamGetForUser, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var teams []domain.Team
+	for rows.Next() {
+		var t domain.Team
+		// team_response: id, name, status, tenant_id, created_at, updated_at, created_by, updated_by
+		if err := rows.Scan(
+			&t.ID,
+			&t.Name,
+			&t.Status,
+			&t.TenantID,
+			&t.CreatedAt,
+			&t.UpdatedAt,
+			&t.CreatedBy,
+			&t.UpdatedBy,
+		); err != nil {
+			return nil, err
+		}
+		teams = append(teams, t)
+	}
+	return teams, nil
 }

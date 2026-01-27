@@ -75,7 +75,9 @@ func (uc *DeviceProfileUseCase) GetByID(ctx context.Context, id string) (*Device
 	return toDeviceProfileOutput(dp), nil
 }
 
-func (uc *DeviceProfileUseCase) List(ctx context.Context, limit, offset int) ([]DeviceProfileOutput, error) {
+func (uc *DeviceProfileUseCase) List(ctx context.Context, p domain.Pagination) ([]DeviceProfileOutput, error) {
+	limit := p.Limit
+	offset := p.Offset
 	if limit <= 0 {
 		limit = 100
 	}

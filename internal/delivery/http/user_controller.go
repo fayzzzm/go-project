@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/fayzzzm/go-project/internal/domain"
 	"github.com/fayzzzm/go-project/internal/middleware"
 	"github.com/fayzzzm/go-project/internal/usecase"
 	"github.com/fayzzzm/go-project/pkg/utils"
@@ -13,7 +14,7 @@ import (
 type UserUseCase interface {
 	Create(ctx context.Context, input usecase.CreateUserInput) (*usecase.UserOutput, error)
 	GetByID(ctx context.Context, id string) (*usecase.UserOutput, error)
-	List(ctx context.Context, limit, offset int, teamID, tenantID string) ([]usecase.UserOutput, error)
+	List(ctx context.Context, p domain.Pagination, teamID, tenantID string) ([]usecase.UserOutput, error)
 	Update(ctx context.Context, id string, input usecase.UpdateUserInput) (*usecase.UserOutput, error)
 	Delete(ctx context.Context, id string) error
 }
@@ -41,33 +42,21 @@ func NewUserController(r gin.IRouter, uc UserUseCase) {
 }
 
 func (c *UserController) Create(ctx *gin.Context) (any, error) {
-	input := middleware.GetBody[usecase.CreateUserInput](ctx)
-
-	return c.uc.Create(ctx.Request.Context(), input)
+	return c.uc.Create(ctx.Request.Context(), middleware.GetBody[usecase.CreateUserInput](ctx))
 }
 
 func (c *UserController) GetByID(ctx *gin.Context) (any, error) {
-	id := ctx.Param("id")
-	return c.uc.GetByID(ctx.Request.Context(), id)
+	return c.uc.GetByID(ctx.Request.Context(), ctx.Param("id"))
 }
 
 func (c *UserController) List(ctx *gin.Context) (any, error) {
-	limit, offset := middleware.GetPagination(ctx)
-	teamID := ctx.Query("team_id")
-	tenantID := middleware.GetTenantID(ctx)
-
-	return c.uc.List(ctx.Request.Context(), limit, offset, teamID, tenantID)
+	return c.uc.List(ctx.Request.Context(), middleware.GetPagination(ctx), ctx.Query("team_id"), middleware.GetTenantID(ctx))
 }
 
 func (c *UserController) Update(ctx *gin.Context) (any, error) {
-	id := ctx.Param("id")
-	input := middleware.GetBody[usecase.UpdateUserInput](ctx)
-
-	return c.uc.Update(ctx.Request.Context(), id, input)
+	return c.uc.Update(ctx.Request.Context(), ctx.Param("id"), middleware.GetBody[usecase.UpdateUserInput](ctx))
 }
 
 func (c *UserController) Delete(ctx *gin.Context) (any, error) {
-	id := ctx.Param("id")
-	err := c.uc.Delete(ctx.Request.Context(), id)
-	return nil, err
+	return nil, c.uc.Delete(ctx.Request.Context(), ctx.Param("id"))
 }

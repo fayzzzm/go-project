@@ -149,18 +149,18 @@ BEGIN
     RETURN QUERY
     INSERT INTO teams.members (team_id, user_id, role)
     VALUES (r.team_id, r.user_id, COALESCE(r.role, 'MEMBER'))
-    ON CONFLICT (team_id, user_id) DO UPDATE SET role = EXCLUDED.role
     RETURNING team_id, user_id, role::TEXT, created_at;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Get User Teams
 CREATE OR REPLACE FUNCTION teams.get_for_user(p_user_id UUID)
-RETURNS SETOF teams.member_response AS $$
+RETURNS SETOF teams.team_response AS $$
 BEGIN
     RETURN QUERY
-    SELECT m.team_id, m.user_id, m.role::TEXT, m.created_at
-    FROM teams.members m
+    SELECT t.id, t.name, t.status, t.tenant_id, t.created_at, t.updated_at, t.created_by, t.updated_by
+    FROM teams.team t
+    JOIN teams.members m ON m.team_id = t.id
     WHERE m.user_id = p_user_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER STABLE;

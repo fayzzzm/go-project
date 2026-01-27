@@ -4,6 +4,11 @@ import (
 	"time"
 )
 
+type Pagination struct {
+	Limit  int
+	Offset int
+}
+
 // Tenant represents a customer or organization.
 type Tenant struct {
 	ID        string    `json:"id" db:"id"`

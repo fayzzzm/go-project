@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/fayzzzm/go-project/internal/domain"
 	"github.com/fayzzzm/go-project/internal/middleware"
 	"github.com/fayzzzm/go-project/internal/usecase"
 	"github.com/fayzzzm/go-project/pkg/utils"
@@ -13,7 +14,7 @@ import (
 type CabinetUseCase interface {
 	Create(ctx context.Context, input usecase.CreateCabinetInput, userID string) (*usecase.CabinetOutput, error)
 	GetByID(ctx context.Context, id string) (*usecase.CabinetOutput, error)
-	List(ctx context.Context, limit, offset int) ([]usecase.CabinetOutput, error)
+	List(ctx context.Context, p domain.Pagination) ([]usecase.CabinetOutput, error)
 	Update(ctx context.Context, id string, input usecase.UpdateCabinetInput) (*usecase.CabinetOutput, error)
 	Delete(ctx context.Context, id string) error
 }
@@ -37,32 +38,21 @@ func NewCabinetController(r gin.IRouter, uc CabinetUseCase) {
 }
 
 func (c *CabinetController) Create(ctx *gin.Context) (any, error) {
-	input := middleware.GetBody[usecase.CreateCabinetInput](ctx)
-	userID, err := middleware.GetUserID(ctx)
-	if err != nil {
-		return nil, err
-	}
-	return c.uc.Create(ctx.Request.Context(), input, userID)
+	return c.uc.Create(ctx.Request.Context(), middleware.GetBody[usecase.CreateCabinetInput](ctx), ctx.GetString(middleware.ContextUserID))
 }
 
 func (c *CabinetController) GetByID(ctx *gin.Context) (any, error) {
-	id := ctx.Param("id")
-	return c.uc.GetByID(ctx.Request.Context(), id)
+	return c.uc.GetByID(ctx.Request.Context(), ctx.Param("id"))
 }
 
 func (c *CabinetController) List(ctx *gin.Context) (any, error) {
-	limit, offset := middleware.GetPagination(ctx)
-	return c.uc.List(ctx.Request.Context(), limit, offset)
+	return c.uc.List(ctx.Request.Context(), middleware.GetPagination(ctx))
 }
 
 func (c *CabinetController) Update(ctx *gin.Context) (any, error) {
-	id := ctx.Param("id")
-	input := middleware.GetBody[usecase.UpdateCabinetInput](ctx)
-	return c.uc.Update(ctx.Request.Context(), id, input)
+	return c.uc.Update(ctx.Request.Context(), ctx.Param("id"), middleware.GetBody[usecase.UpdateCabinetInput](ctx))
 }
 
 func (c *CabinetController) Delete(ctx *gin.Context) (any, error) {
-	id := ctx.Param("id")
-	err := c.uc.Delete(ctx.Request.Context(), id)
-	return nil, err
+	return nil, c.uc.Delete(ctx.Request.Context(), ctx.Param("id"))
 }

@@ -101,7 +101,9 @@ func (uc *DeviceUseCase) GetByID(ctx context.Context, id string) (*DeviceOutput,
 	return toDeviceOutput(device), nil
 }
 
-func (uc *DeviceUseCase) List(ctx context.Context, limit, offset int) ([]DeviceOutput, error) {
+func (uc *DeviceUseCase) List(ctx context.Context, p domain.Pagination) ([]DeviceOutput, error) {
+	limit := p.Limit
+	offset := p.Offset
 	if limit <= 0 {
 		limit = 100
 	}

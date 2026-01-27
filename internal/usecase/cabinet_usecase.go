@@ -75,7 +75,9 @@ func (uc *CabinetUseCase) GetByID(ctx context.Context, id string) (*CabinetOutpu
 	return toCabinetOutput(cabinet), nil
 }
 
-func (uc *CabinetUseCase) List(ctx context.Context, limit, offset int) ([]CabinetOutput, error) {
+func (uc *CabinetUseCase) List(ctx context.Context, p domain.Pagination) ([]CabinetOutput, error) {
+	limit := p.Limit
+	offset := p.Offset
 	if limit <= 0 {
 		limit = 100
 	}

@@ -3,20 +3,18 @@ package middleware
 import (
 	"strconv"
 
+	"github.com/fayzzzm/go-project/internal/domain"
 	"github.com/gin-gonic/gin"
 )
 
 // GetPagination extracts limit and offset from the query parameters.
-// It returns (0, 0) if parsing fails or parameters are missing,
-// delegating default logic to the business layer.
-func GetPagination(c *gin.Context) (int, int) {
-	limit := 0
+func GetPagination(c *gin.Context) domain.Pagination {
+	var p domain.Pagination
 	if l := c.Query("limit"); l != "" {
-		limit, _ = strconv.Atoi(l)
+		p.Limit, _ = strconv.Atoi(l)
 	}
-	offset := 0
 	if o := c.Query("offset"); o != "" {
-		offset, _ = strconv.Atoi(o)
+		p.Offset, _ = strconv.Atoi(o)
 	}
-	return limit, offset
+	return p
 }

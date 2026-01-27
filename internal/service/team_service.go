@@ -14,6 +14,7 @@ type TeamRepository interface {
 	Delete(ctx context.Context, id string) error
 	AddMember(ctx context.Context, teamID, userID, role string) (*domain.Member, error)
 	IsMember(ctx context.Context, teamID, userID string) (bool, error)
+	GetForUser(ctx context.Context, userID string) ([]domain.Team, error)
 }
 
 type TeamServicer interface {
@@ -24,6 +25,7 @@ type TeamServicer interface {
 	Delete(ctx context.Context, id string) error
 	AddMember(ctx context.Context, teamID, userID, role string) (*domain.Member, error)
 	IsMember(ctx context.Context, teamID, userID string) (bool, error)
+	GetForUser(ctx context.Context, userID string) ([]domain.Team, error)
 }
 
 type TeamService struct {
@@ -60,4 +62,8 @@ func (s *TeamService) AddMember(ctx context.Context, teamID, userID, role string
 
 func (s *TeamService) IsMember(ctx context.Context, teamID, userID string) (bool, error) {
 	return s.repo.IsMember(ctx, teamID, userID)
+}
+
+func (s *TeamService) GetForUser(ctx context.Context, userID string) ([]domain.Team, error) {
+	return s.repo.GetForUser(ctx, userID)
 }

@@ -11,6 +11,7 @@ type TeamServicer interface {
 	Create(ctx context.Context, t *domain.Team) error
 	GetByID(ctx context.Context, id string) (*domain.Team, error)
 	List(ctx context.Context, limit, offset int, tenantID, userID string) ([]domain.Team, error)
+	GetForUser(ctx context.Context, userID string) ([]domain.Team, error)
 	Update(ctx context.Context, t *domain.Team) error
 	Delete(ctx context.Context, id string) error
 	AddMember(ctx context.Context, teamID, userID, role string) (*domain.Member, error)
@@ -89,7 +90,9 @@ func (uc *TeamUseCase) GetByID(ctx context.Context, id string) (*TeamOutput, err
 	return toTeamOutput(team), nil
 }
 
-func (uc *TeamUseCase) List(ctx context.Context, limit, offset int, tenantID, userID string) ([]TeamOutput, error) {
+func (uc *TeamUseCase) List(ctx context.Context, p domain.Pagination, tenantID, userID string) ([]TeamOutput, error) {
+	limit := p.Limit
+	offset := p.Offset
 	if limit <= 0 {
 		limit = 100
 	}
@@ -100,6 +103,19 @@ func (uc *TeamUseCase) List(ctx context.Context, limit, offset int, tenantID, us
 		offset = 0
 	}
 	teams, err := uc.svc.List(ctx, limit, offset, tenantID, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	output := make([]TeamOutput, len(teams))
+	for i, t := range teams {
+		output[i] = *toTeamOutput(&t)
+	}
+	return output, nil
+}
+
+func (uc *TeamUseCase) ListForUser(ctx context.Context, userID string) ([]TeamOutput, error) {
+	teams, err := uc.svc.GetForUser(ctx, userID)
 	if err != nil {
 		return nil, err
 	}

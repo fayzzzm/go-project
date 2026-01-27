@@ -88,7 +88,9 @@ func (uc *UserUseCase) GetByID(ctx context.Context, id string) (*UserOutput, err
 	return toUserOutput(user), nil
 }
 
-func (uc *UserUseCase) List(ctx context.Context, limit, offset int, teamID, tenantID string) ([]UserOutput, error) {
+func (uc *UserUseCase) List(ctx context.Context, p domain.Pagination, teamID, tenantID string) ([]UserOutput, error) {
+	limit := p.Limit
+	offset := p.Offset
 	if limit <= 0 {
 		limit = 100
 	}

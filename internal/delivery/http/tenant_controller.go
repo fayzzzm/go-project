@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/fayzzzm/go-project/internal/domain"
 	"github.com/fayzzzm/go-project/internal/middleware"
 	"github.com/fayzzzm/go-project/internal/usecase"
 	"github.com/fayzzzm/go-project/pkg/utils"
@@ -11,7 +12,7 @@ import (
 )
 
 type TenantUseCase interface {
-	List(ctx context.Context, limit, offset int) ([]usecase.TenantOutput, error)
+	List(ctx context.Context, p domain.Pagination) ([]usecase.TenantOutput, error)
 }
 
 type TenantController struct {
@@ -28,6 +29,5 @@ func NewTenantController(r gin.IRouter, uc TenantUseCase) {
 }
 
 func (c *TenantController) List(ctx *gin.Context) (any, error) {
-	limit, offset := middleware.GetPagination(ctx)
-	return c.uc.List(ctx.Request.Context(), limit, offset)
+	return c.uc.List(ctx.Request.Context(), middleware.GetPagination(ctx))
 }
