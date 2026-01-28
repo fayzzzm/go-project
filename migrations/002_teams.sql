@@ -13,8 +13,8 @@ CREATE TABLE IF NOT EXISTS teams.team (
     tenant_id UUID REFERENCES tenants.tenant(id),
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),
-    created_by TEXT DEFAULT '',
-    updated_by TEXT DEFAULT ''
+    created_by UUID,
+    updated_by UUID
 );
 
 -- INDEX: Active Teams
@@ -38,7 +38,9 @@ CREATE TYPE teams.team_request AS (
     tenant_id     UUID,
     limit_val     INTEGER,
     offset_val    INTEGER,
-    user_id       UUID
+    user_id       UUID,
+    created_by    UUID,
+    updated_by    UUID
 );
 
 CREATE TYPE teams.team_response AS (
@@ -48,8 +50,8 @@ CREATE TYPE teams.team_response AS (
     tenant_id     UUID,
     created_at    TIMESTAMPTZ,
     updated_at    TIMESTAMPTZ,
-    created_by    TEXT,
-    updated_by    TEXT
+    created_by    UUID,
+    updated_by    UUID
 );
 
 -- FUNCTIONS
@@ -61,10 +63,11 @@ DECLARE
     v_id UUID;
 BEGIN
     INSERT INTO teams.team (
-        name, status, tenant_id
+        name, status, tenant_id, created_by, updated_by
     )
     VALUES (
-        TRIM(r.name), COALESCE(r.status, 'active'), r.tenant_id
+        TRIM(r.name), COALESCE(r.status, 'active'), r.tenant_id,
+        r.created_by, r.updated_by
     )
     RETURNING id INTO v_id;
     
@@ -114,7 +117,8 @@ BEGIN
     SET 
         name = COALESCE(r.name, name),
         status = COALESCE(r.status, status),
-        updated_at = NOW()
+        updated_at = NOW(),
+        updated_by = COALESCE(r.updated_by, updated_by)
     WHERE id = r.id AND (r.tenant_id IS NULL OR tenant_id = r.tenant_id)
     RETURNING id, name, status, tenant_id, created_at, updated_at, created_by, updated_by;
 END;
@@ -171,7 +175,7 @@ CREATE OR REPLACE FUNCTION users.list(r users.user_request)
 RETURNS SETOF users.user_response AS $$
 BEGIN
     RETURN QUERY
-    SELECT u.id, u.email, u.name, u.address, u.phone, u.role, u.app_metadata, u.user_metadata, ''::text as password, u.created_at, u.updated_at, u.tenant_id
+    SELECT u.id, u.email, u.name, u.address, u.phone, u.role, u.app_metadata, u.user_metadata, ''::text as password, u.created_at, u.updated_at, u.tenant_id, u.created_by, u.updated_by
     FROM users.user u
     WHERE u.tenant_id = r.tenant_id
       AND (r.team_id IS NULL OR EXISTS (

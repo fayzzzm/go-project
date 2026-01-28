@@ -19,6 +19,8 @@ type UserRequest struct {
 	OffsetVal    *int                   `db:"offset_val"`
 	TeamID       *string                `db:"team_id"`
 	TenantID     *string                `db:"tenant_id"`
+	CreatedBy    *string                `db:"created_by"`
+	UpdatedBy    *string                `db:"updated_by"`
 }
 
 type DeviceRequest struct {
@@ -33,6 +35,8 @@ type DeviceRequest struct {
 	TenantID        *string `db:"tenant_id"`
 	LimitVal        *int    `db:"limit_val"`
 	OffsetVal       *int    `db:"offset_val"`
+	CreatedBy       *string `db:"created_by"`
+	UpdatedBy       *string `db:"updated_by"`
 }
 
 type CabinetRequest struct {
@@ -47,6 +51,8 @@ type CabinetRequest struct {
 	LimitVal    *int    `db:"limit_val"`
 	OffsetVal   *int    `db:"offset_val"`
 	UserID      *string `db:"user_id"`
+	CreatedBy   *string `db:"created_by"` // Cabinet/Team tables already had these in valid SQL, ensuring struct matches
+	UpdatedBy   *string `db:"updated_by"`
 }
 
 type TeamRequest struct {
@@ -57,6 +63,8 @@ type TeamRequest struct {
 	LimitVal  *int    `db:"limit_val"`
 	OffsetVal *int    `db:"offset_val"`
 	UserID    *string `db:"user_id"`
+	CreatedBy *string `db:"created_by"`
+	UpdatedBy *string `db:"updated_by"`
 }
 
 type DeviceProfileRequest struct {
@@ -66,6 +74,8 @@ type DeviceProfileRequest struct {
 	TenantID    *string `db:"tenant_id"`
 	LimitVal    *int    `db:"limit_val"`
 	OffsetVal   *int    `db:"offset_val"`
+	CreatedBy   *string `db:"created_by"`
+	UpdatedBy   *string `db:"updated_by"`
 }
 
 type MemberRequest struct {
@@ -92,16 +102,20 @@ func NewUserRequest(u *domain.User) *UserRequest {
 		AppMetadata:  u.AppMetadata,
 		UserMetadata: u.UserMetadata,
 		Password:     utils.StringPtrOrNil(u.Password),
-		TenantID:     utils.StringPtrOrNil(u.TenantID),
+		TenantID:     u.TenantID,
+		CreatedBy:    u.CreatedBy,
+		UpdatedBy:    u.UpdatedBy,
 	}
 }
 
 func NewTeamRequest(t *domain.Team) *TeamRequest {
 	return &TeamRequest{
-		ID:       utils.StringPtrOrNil(t.ID),
-		Name:     &t.Name,
-		Status:   t.Status,
-		TenantID: t.TenantID,
+		ID:        utils.StringPtrOrNil(t.ID),
+		Name:      &t.Name,
+		Status:    t.Status,
+		TenantID:  t.TenantID,
+		CreatedBy: t.CreatedBy,
+		UpdatedBy: t.UpdatedBy,
 	}
 }
 
@@ -116,6 +130,8 @@ func NewDeviceRequest(d *domain.Device) *DeviceRequest {
 		CabinetID:       d.CabinetID,
 		TeamID:          d.TeamID,
 		TenantID:        d.TenantID,
+		CreatedBy:       d.CreatedBy,
+		UpdatedBy:       d.UpdatedBy,
 	}
 }
 
@@ -130,6 +146,8 @@ func NewCabinetRequest(c *domain.Cabinet, userID *string) *CabinetRequest {
 		TeamID:      c.TeamID,
 		TenantID:    c.TenantID,
 		UserID:      userID,
+		CreatedBy:   c.CreatedBy,
+		UpdatedBy:   c.UpdatedBy,
 	}
 }
 
@@ -139,5 +157,7 @@ func NewDeviceProfileRequest(dp *domain.DeviceProfile) *DeviceProfileRequest {
 		Name:        &dp.Name,
 		Description: dp.Description,
 		TenantID:    dp.TenantID,
+		CreatedBy:   dp.CreatedBy,
+		UpdatedBy:   dp.UpdatedBy,
 	}
 }

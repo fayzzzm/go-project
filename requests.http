@@ -1,14 +1,13 @@
 @baseUrl = http://localhost:8080/api/v1
-@tenantId = a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11
-@createdUserId = 04700a73-aa68-4872-8fcf-ade9ee2a8d4a
+@tenantId = {{paste_tenant_id}}
+@createdUserId = {{paste_user_id}}
 @createdDeviceId = {{paste_device_id}}
 @createdCabinetId = {{paste_cabinet_id}}
-@createdTeamId = 34c5a214-9e6b-4bb1-9f91-3328b222805c
+@createdTeamId = {{paste_team_id}}
 @createdProfileId = {{paste_profile_id}}
 
 @password = password123
-@authToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFkbWluQGl0c3dhcmUuY29tIiwiZXhwIjoxNzY5NzA2NDQ4LCJyb2xlIjoiYWRtaW4iLCJzdWIiOiJhYWFhMTExMS1hYWFhLWFhYWEtYWFhYS1hYWFhYWFhYWFhYWEiLCJ0ZW5hbnRfaWQiOiJhMGVlYmM5OS05YzBiLTRlZjgtYmI2ZC02YmI5YmQzODBhMTEifQ.tiolDCtNseTqvlxDAjf4DWxBabBVbvPOUisGC9Qa4NE
-
+@authToken = {{paste_auth_token}}
 ### ============================================================================
 ### TENANTS
 ### ============================================================================
@@ -52,17 +51,17 @@ Authorization: Bearer {{authToken}}
 X-Tenant-ID: {{tenantId}}
 
 {
-    "email": "developer@itsware.com",
+    "email": "developer1@itsware.com",
     "password": "{{password}}",
     "name": "10x Developer",
     "address": "Silicon Valley",
     "phone": "+1-555-0199",
     "app_metadata": {
-        "role": "admin",
-        "permissions": ["all"]
+        "theme": "dark"
     },
     "user_metadata": {
-        "theme": "dark"
+        "role": "admin",
+        "permissions": ["all"]
     }
 }
 

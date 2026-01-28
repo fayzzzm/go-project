@@ -80,6 +80,8 @@ func MapPgError(err error) error {
 			return fmt.Errorf("%w: %s", domain.ErrInvalidInput, pgErr.Detail)
 		case "22P02": // invalid_text_representation
 			return fmt.Errorf("%w: %s", domain.ErrInvalidInput, pgErr.Message)
+		case "P0001": // raise_exception
+			return fmt.Errorf("%w: %s", domain.ErrForbidden, pgErr.Message)
 		}
 	}
 	return err

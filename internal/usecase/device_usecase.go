@@ -54,6 +54,11 @@ func NewDeviceUseCase(svc DeviceServicer) *DeviceUseCase {
 }
 
 func (uc *DeviceUseCase) Create(ctx context.Context, input CreateDeviceInput) (*DeviceOutput, error) {
+	userID := ""
+	if val := ctx.Value("user_id"); val != nil {
+		userID = val.(string)
+	}
+
 	device := &domain.Device{
 		Name:            input.Name,
 		Description:     input.Description,
@@ -63,6 +68,8 @@ func (uc *DeviceUseCase) Create(ctx context.Context, input CreateDeviceInput) (*
 		CabinetID:       input.CabinetID,
 		TeamID:          input.TeamID,
 		TenantID:        utils.StringPtrOrNil(input.TenantID),
+		CreatedBy:       utils.StringPtrOrNil(userID),
+		UpdatedBy:       utils.StringPtrOrNil(userID),
 	}
 
 	if err := uc.svc.Create(ctx, device); err != nil {
@@ -121,6 +128,10 @@ func (uc *DeviceUseCase) Update(ctx context.Context, id string, input UpdateDevi
 	}
 	if input.TeamID != nil {
 		device.TeamID = input.TeamID
+	}
+
+	if val := ctx.Value("user_id"); val != nil {
+		device.UpdatedBy = utils.StringPtrOrNil(val.(string))
 	}
 
 	if err := uc.svc.Update(ctx, device); err != nil {

@@ -19,8 +19,8 @@ CREATE TABLE IF NOT EXISTS cabinets.cabinet (
     tenant_id UUID REFERENCES tenants.tenant(id),
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),
-    created_by TEXT DEFAULT '',
-    updated_by TEXT DEFAULT ''
+    created_by UUID,
+    updated_by UUID
 );
 
 -- INDEX: Available Cabinets
@@ -38,7 +38,9 @@ CREATE TYPE cabinets.cabinet_request AS (
     tenant_id     UUID,
     limit_val     INTEGER,
     offset_val    INTEGER,
-    user_id       UUID
+    user_id       UUID,
+    created_by    UUID,
+    updated_by    UUID
 );
 
 CREATE TYPE cabinets.cabinet_response AS (
@@ -51,9 +53,9 @@ CREATE TYPE cabinets.cabinet_response AS (
     team_id     UUID,
     tenant_id   UUID,
     created_at  TIMESTAMPTZ,
-    created_by  TEXT,
+    created_by  UUID,
     updated_at  TIMESTAMPTZ,
-    updated_by  TEXT
+    updated_by  UUID
 );
 
 -- CABINET FUNCTIONS
@@ -74,10 +76,10 @@ BEGIN
     END IF;
 
     INSERT INTO cabinets.cabinet (
-        name, description, location, machine_id, team_id, tenant_id
+        name, description, location, machine_id, team_id, tenant_id, created_by, updated_by
     )
     VALUES (
-        r.name, r.description, r.location, r.machine_id, r.team_id, r.tenant_id
+        r.name, r.description, r.location, r.machine_id, r.team_id, r.tenant_id, r.created_by, r.updated_by
     )
     RETURNING id INTO v_id;
     
@@ -122,7 +124,8 @@ BEGIN
         machine_id = COALESCE(r.machine_id, machine_id),
         status = COALESCE(r.status, status),
         team_id = COALESCE(r.team_id, team_id),
-        updated_at = NOW()
+        updated_at = NOW(),
+        updated_by = COALESCE(r.updated_by, updated_by)
     WHERE id = r.id AND (r.tenant_id IS NULL OR tenant_id = r.tenant_id)
     RETURNING id, name, description, location, machine_id, status, team_id, tenant_id, created_at, created_by, updated_at, updated_by;
 END;

@@ -117,7 +117,7 @@ func ErrorHandlerMiddleware() gin.HandlerFunc {
 						fmt.Printf("[Internal Error] %s\n", err.Error())
 						parsedError = &APIErrorResponse{
 							Code:    domain.CodeInternalError,
-							Message: "An unexpected internal error occurred.",
+							Message: fmt.Sprintf("Internal Error: %s", err.Error()),
 						}
 					}
 				}

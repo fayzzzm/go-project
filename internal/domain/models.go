@@ -37,6 +37,8 @@ type DeviceProfile struct {
 	TenantID    *string   `json:"tenant_id" db:"tenant_id"`
 	CreatedAt   time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at" db:"updated_at"`
+	CreatedBy   *string   `json:"created_by" db:"created_by"`
+	UpdatedBy   *string   `json:"updated_by" db:"updated_by"`
 }
 
 type Member struct {
@@ -59,6 +61,9 @@ type Device struct {
 	TeamID          *string   `json:"team_id" db:"team_id"`
 	TenantID        *string   `json:"tenant_id" db:"tenant_id"`
 	CreatedAt       time.Time `json:"created_at" db:"created_at"`
+	UpdatedAt       time.Time `json:"updated_at" db:"updated_at"`
+	CreatedBy       *string   `json:"created_by" db:"created_by"`
+	UpdatedBy       *string   `json:"updated_by" db:"updated_by"`
 }
 
 // Cabinet represents a storage cabinet.
@@ -72,9 +77,9 @@ type Cabinet struct {
 	TeamID      *string   `json:"team_id" db:"team_id"`
 	TenantID    *string   `json:"tenant_id" db:"tenant_id"`
 	CreatedAt   time.Time `json:"created_at" db:"created_at"`
-	CreatedBy   string    `json:"created_by" db:"created_by"`
 	UpdatedAt   time.Time `json:"updated_at" db:"updated_at"`
-	UpdatedBy   string    `json:"updated_by" db:"updated_by"`
+	CreatedBy   *string   `json:"created_by" db:"created_by"`
+	UpdatedBy   *string   `json:"updated_by" db:"updated_by"`
 	Team        *Team     `json:"team,omitempty" db:"-"` // Association, ignore in DB scan if flat
 }
 
@@ -85,9 +90,9 @@ type Team struct {
 	Status    *string   `json:"status" db:"status"`
 	TenantID  *string   `json:"tenant_id" db:"tenant_id"`
 	CreatedAt time.Time `json:"created_at" db:"created_at"`
-	CreatedBy string    `json:"created_by" db:"created_by"`
+	CreatedBy *string   `json:"created_by" db:"created_by"`
 	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
-	UpdatedBy string    `json:"updated_by" db:"updated_by"`
+	UpdatedBy *string   `json:"updated_by" db:"updated_by"`
 }
 
 // User represents a system user.
@@ -96,7 +101,7 @@ type User struct {
 	Email              string                 `json:"email" db:"email"`
 	Phone              *string                `json:"phone" db:"phone"`
 	Role               string                 `json:"role" db:"role"`
-	TenantID           string                 `json:"tenant_id" db:"tenant_id"`
+	TenantID           *string                `json:"tenant_id" db:"tenant_id"`
 	Aud                string                 `json:"aud" db:"-"`
 	IsAnonymous        bool                   `json:"is_anonymous" db:"-"`
 	ConfirmationSentAt time.Time              `json:"confirmation_sent_at" db:"-"`
@@ -105,7 +110,9 @@ type User struct {
 	AppMetadata        map[string]interface{} `json:"app_metadata" db:"app_metadata"`   // JSONB
 	UserMetadata       map[string]interface{} `json:"user_metadata" db:"user_metadata"` // JSONB
 	// Name field requested by user, mapping to user_metadata potentially or top level if extending schema
-	Name     *string `json:"name,omitempty" db:"name"`
-	Address  *string `json:"address,omitempty" db:"address"`
-	Password string  `json:"-" db:"password"`
+	Name      *string `json:"name,omitempty" db:"name"`
+	Address   *string `json:"address,omitempty" db:"address"`
+	Password  string  `json:"-" db:"password"`
+	CreatedBy *string `json:"created_by" db:"created_by"`
+	UpdatedBy *string `json:"updated_by" db:"updated_by"`
 }

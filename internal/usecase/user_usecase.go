@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/fayzzzm/go-project/internal/domain"
+	"github.com/fayzzzm/go-project/pkg/utils"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -37,12 +38,14 @@ type UpdateUserInput struct {
 }
 
 type UserOutput struct {
-	ID       string `json:"id"`
-	Email    string `json:"email"`
-	Name     string `json:"name"`
-	Address  string `json:"address"`
-	Role     string `json:"role"`
-	TenantID string `json:"tenant_id"`
+	ID           string                 `json:"id"`
+	Email        string                 `json:"email"`
+	Name         string                 `json:"name"`
+	Address      string                 `json:"address"`
+	Role         string                 `json:"role"`
+	TenantID     string                 `json:"tenant_id"`
+	AppMetadata  map[string]interface{} `json:"app_metadata"`
+	UserMetadata map[string]interface{} `json:"user_metadata"`
 }
 
 type UserUseCase struct {
@@ -61,6 +64,11 @@ func (uc *UserUseCase) Create(ctx context.Context, input CreateUserInput) (*User
 		return nil, err
 	}
 
+	userID := ""
+	if val := ctx.Value("user_id"); val != nil {
+		userID = val.(string)
+	}
+
 	user := &domain.User{
 		Email:        input.Email,
 		Name:         &input.Name,
@@ -69,7 +77,16 @@ func (uc *UserUseCase) Create(ctx context.Context, input CreateUserInput) (*User
 		Password:     string(hashedBytes),
 		AppMetadata:  input.AppMetadata,
 		UserMetadata: input.UserMetadata,
-		TenantID:     input.TenantID,
+		TenantID:     utils.StringPtrOrNil(input.TenantID),
+		CreatedBy:    utils.StringPtrOrNil(userID),
+		UpdatedBy:    utils.StringPtrOrNil(userID),
+	}
+
+	// Extract role from user_metadata if present
+	if r, ok := input.UserMetadata["role"].(string); ok {
+		user.Role = r
+	} else {
+		user.Role = "user"
 	}
 
 	if err := uc.svc.Create(ctx, user); err != nil {
@@ -112,6 +129,10 @@ func (uc *UserUseCase) Update(ctx context.Context, id string, input UpdateUserIn
 	}
 	if input.UserMetadata != nil {
 		user.UserMetadata = input.UserMetadata
+		// Update role if changed in user_metadata
+		if r, ok := input.UserMetadata["role"].(string); ok {
+			user.Role = r
+		}
 	}
 	if input.Email != nil {
 		user.Email = *input.Email
@@ -124,6 +145,10 @@ func (uc *UserUseCase) Update(ctx context.Context, id string, input UpdateUserIn
 	}
 	if input.Phone != nil {
 		user.Phone = input.Phone
+	}
+
+	if val := ctx.Value("user_id"); val != nil {
+		user.UpdatedBy = utils.StringPtrOrNil(val.(string))
 	}
 
 	if err := uc.svc.Update(ctx, user); err != nil {
@@ -143,12 +168,14 @@ func toUserOutput(u *domain.User) *UserOutput {
 		address = *u.Address
 	}
 	return &UserOutput{
-		ID:       u.ID,
-		Email:    u.Email,
-		Name:     name,
-		Address:  address,
-		Role:     u.Role,
-		TenantID: u.TenantID,
+		ID:           u.ID,
+		Email:        u.Email,
+		Name:         name,
+		Address:      address,
+		Role:         u.Role,
+		TenantID:     utils.StringValue(u.TenantID),
+		AppMetadata:  u.AppMetadata,
+		UserMetadata: u.UserMetadata,
 	}
 }
 

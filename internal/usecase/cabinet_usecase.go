@@ -48,10 +48,12 @@ func NewCabinetUseCase(svc CabinetServicer) *CabinetUseCase {
 
 func (uc *CabinetUseCase) Create(ctx context.Context, input CreateCabinetInput, userID string) (*CabinetOutput, error) {
 	cabinet := &domain.Cabinet{
-		Name:     input.Name,
-		Location: utils.StringPtrOrNil(input.Location),
-		TeamID:   utils.StringPtrOrNil(input.TeamID),
-		TenantID: utils.StringPtrOrNil(input.TenantID),
+		Name:      input.Name,
+		Location:  utils.StringPtrOrNil(input.Location),
+		TeamID:    utils.StringPtrOrNil(input.TeamID),
+		TenantID:  utils.StringPtrOrNil(input.TenantID),
+		CreatedBy: utils.StringPtrOrNil(userID),
+		UpdatedBy: utils.StringPtrOrNil(userID),
 	}
 
 	if err := uc.svc.Create(ctx, cabinet, userID); err != nil {
@@ -99,9 +101,12 @@ func (uc *CabinetUseCase) Update(ctx context.Context, id string, input UpdateCab
 	if input.TeamID != nil {
 		cabinet.TeamID = input.TeamID
 	}
-	// TenantID is usually immutable or handled carefully, but if we allow moving:
 	if input.TenantID != "" {
 		cabinet.TenantID = &input.TenantID
+	}
+
+	if val := ctx.Value("user_id"); val != nil {
+		cabinet.UpdatedBy = utils.StringPtrOrNil(val.(string))
 	}
 
 	if err := uc.svc.Update(ctx, cabinet); err != nil {

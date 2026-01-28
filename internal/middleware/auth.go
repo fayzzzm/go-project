@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"os"
@@ -67,6 +68,8 @@ func AuthMiddleware() gin.HandlerFunc {
 
 		if sub, ok := claims["sub"].(string); ok {
 			c.Set(ContextUserID, sub)
+			// Propagate UserID to Request Context
+			c.Request = c.Request.WithContext(context.WithValue(c.Request.Context(), ContextUserID, sub))
 		}
 		if role, ok := claims["role"].(string); ok {
 			c.Set(ContextUserRole, role)

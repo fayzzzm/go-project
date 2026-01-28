@@ -19,7 +19,9 @@ CREATE TABLE IF NOT EXISTS devices.device (
     tenant_id UUID REFERENCES tenants.tenant(id),
     status TEXT DEFAULT 'available',
     created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    created_by UUID,
+    updated_by UUID
 );
 
 -- INDEX: Available Devices
@@ -37,7 +39,9 @@ CREATE TYPE devices.device_request AS (
     team_id            UUID,
     tenant_id          UUID,
     limit_val          INTEGER,
-    offset_val         INTEGER
+    offset_val         INTEGER,
+    created_by         UUID,
+    updated_by         UUID
 );
 
 CREATE TYPE devices.device_response AS (
@@ -51,7 +55,9 @@ CREATE TYPE devices.device_response AS (
     team_id            UUID,
     tenant_id          UUID,
     status             TEXT,
-    created_at         TIMESTAMPTZ
+    created_at         TIMESTAMPTZ,
+    created_by         UUID,
+    updated_by         UUID
 );
 
 -- DEVICE FUNCTIONS
@@ -62,17 +68,18 @@ DECLARE
 BEGIN
     INSERT INTO devices.device (
         name, description, serial_number, epc, 
-        device_profile_id, cabinet_id, team_id, tenant_id
+        device_profile_id, cabinet_id, team_id, tenant_id, created_by, updated_by
     )
     VALUES (
         r.name, r.description, r.serial_number, r.epc, 
-        r.device_profile_id, r.cabinet_id, r.team_id, r.tenant_id
+        r.device_profile_id, r.cabinet_id, r.team_id, r.tenant_id,
+        r.created_by, r.updated_by
     )
     RETURNING id INTO v_id;
     
     RETURN QUERY SELECT 
         id, name, description, serial_number, epc, 
-        device_profile_id, cabinet_id, team_id, tenant_id, status, created_at 
+        device_profile_id, cabinet_id, team_id, tenant_id, status, created_at, created_by, updated_by
     FROM devices.device WHERE id = v_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -82,7 +89,7 @@ RETURNS SETOF devices.device_response AS $$
 BEGIN
     RETURN QUERY
     SELECT id, name, description, serial_number, epc, 
-           device_profile_id, cabinet_id, team_id, tenant_id, status, created_at
+           device_profile_id, cabinet_id, team_id, tenant_id, status, created_at, created_by, updated_by
     FROM devices.device
     WHERE id = r.id AND (r.tenant_id IS NULL OR tenant_id = r.tenant_id);
 END;
@@ -114,10 +121,11 @@ BEGIN
         device_profile_id = COALESCE(r.device_profile_id, device_profile_id),
         cabinet_id = COALESCE(r.cabinet_id, cabinet_id),
         team_id = COALESCE(r.team_id, team_id),
-        updated_at = NOW()
+        updated_at = NOW(),
+        updated_by = COALESCE(r.updated_by, updated_by)
     WHERE id = r.id AND (r.tenant_id IS NULL OR tenant_id = r.tenant_id)
     RETURNING id, name, description, serial_number, epc, 
-              device_profile_id, cabinet_id, team_id, tenant_id, status, created_at;
+              device_profile_id, cabinet_id, team_id, tenant_id, status, created_at, created_by, updated_by;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
@@ -156,13 +164,14 @@ BEGIN
     RETURN QUERY
     INSERT INTO devices.device (
         name, description, serial_number, epc, 
-        device_profile_id, cabinet_id, team_id, tenant_id
+        device_profile_id, cabinet_id, team_id, tenant_id, created_by, updated_by
     )
     SELECT 
         r.name, r.description, r.serial_number, r.epc, 
-        r.device_profile_id, r.cabinet_id, r.team_id, r.tenant_id
+        r.device_profile_id, r.cabinet_id, r.team_id, r.tenant_id,
+        r.created_by, r.updated_by
     FROM unnest(r_list) r
     RETURNING id, name, description, serial_number, epc, 
-              device_profile_id, cabinet_id, team_id, tenant_id, status, created_at;
+              device_profile_id, cabinet_id, team_id, tenant_id, status, created_at, created_by, updated_by;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;

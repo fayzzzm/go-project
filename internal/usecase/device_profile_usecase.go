@@ -45,10 +45,17 @@ func NewDeviceProfileUseCase(svc DeviceProfileServicer) *DeviceProfileUseCase {
 }
 
 func (uc *DeviceProfileUseCase) Create(ctx context.Context, input CreateDeviceProfileInput) (*DeviceProfileOutput, error) {
+	userID := ""
+	if val := ctx.Value("user_id"); val != nil {
+		userID = val.(string)
+	}
+
 	dp := &domain.DeviceProfile{
 		Name:        input.Name,
 		Description: input.Description,
 		TenantID:    utils.StringPtrOrNil(input.TenantID),
+		CreatedBy:   utils.StringPtrOrNil(userID),
+		UpdatedBy:   utils.StringPtrOrNil(userID),
 	}
 
 	if err := uc.svc.Create(ctx, dp); err != nil {
@@ -91,6 +98,10 @@ func (uc *DeviceProfileUseCase) Update(ctx context.Context, id string, input Upd
 	}
 	if input.Description != nil {
 		dp.Description = input.Description
+	}
+
+	if val := ctx.Value("user_id"); val != nil {
+		dp.UpdatedBy = utils.StringPtrOrNil(val.(string))
 	}
 
 	if err := uc.svc.Update(ctx, dp); err != nil {

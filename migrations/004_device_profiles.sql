@@ -12,7 +12,9 @@ CREATE TABLE IF NOT EXISTS device_profiles.device_profile (
     description TEXT,
     tenant_id UUID REFERENCES tenants.tenant(id),
     created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    created_by UUID,
+    updated_by UUID
 );
 
 -- TYPE: Request/Response DTOs
@@ -22,7 +24,9 @@ CREATE TYPE device_profiles.device_profile_request AS (
     description   TEXT,
     tenant_id     UUID,
     limit_val     INTEGER,
-    offset_val    INTEGER
+    offset_val    INTEGER,
+    created_by    UUID,
+    updated_by    UUID
 );
 
 CREATE TYPE device_profiles.device_profile_response AS (
@@ -31,7 +35,9 @@ CREATE TYPE device_profiles.device_profile_response AS (
     description   TEXT,
     tenant_id     UUID,
     created_at    TIMESTAMPTZ,
-    updated_at    TIMESTAMPTZ
+    updated_at    TIMESTAMPTZ,
+    created_by    UUID,
+    updated_by    UUID
 );
 
 -- FUNCTIONS
@@ -43,14 +49,15 @@ DECLARE
     v_id UUID;
 BEGIN
     INSERT INTO device_profiles.device_profile (
-        name, description, tenant_id
+        name, description, tenant_id, created_by, updated_by
     )
     VALUES (
-        TRIM(r.name), TRIM(r.description), r.tenant_id
+        TRIM(r.name), TRIM(r.description), r.tenant_id,
+        r.created_by, r.updated_by
     )
     RETURNING id INTO v_id;
     
-    RETURN QUERY SELECT id, name, description, tenant_id, created_at, updated_at
+    RETURN QUERY SELECT id, name, description, tenant_id, created_at, updated_at, created_by, updated_by
     FROM device_profiles.device_profile WHERE id = v_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -60,7 +67,7 @@ CREATE OR REPLACE FUNCTION device_profiles.get_by_id(r device_profiles.device_pr
 RETURNS SETOF device_profiles.device_profile_response AS $$
 BEGIN
     RETURN QUERY
-    SELECT id, name, description, tenant_id, created_at, updated_at
+    SELECT id, name, description, tenant_id, created_at, updated_at, created_by, updated_by
     FROM device_profiles.device_profile
     WHERE id = r.id AND (r.tenant_id IS NULL OR tenant_id = r.tenant_id);
 END;
@@ -71,7 +78,7 @@ CREATE OR REPLACE FUNCTION device_profiles.list(r device_profiles.device_profile
 RETURNS SETOF device_profiles.device_profile_response AS $$
 BEGIN
     RETURN QUERY
-    SELECT id, name, description, tenant_id, created_at, updated_at
+    SELECT id, name, description, tenant_id, created_at, updated_at, created_by, updated_by
     FROM device_profiles.device_profile
     WHERE (r.tenant_id IS NULL OR tenant_id = r.tenant_id)
     ORDER BY created_at DESC
@@ -89,9 +96,10 @@ BEGIN
     SET 
         name = COALESCE(r.name, name),
         description = COALESCE(r.description, description),
-        updated_at = NOW()
+        updated_at = NOW(),
+        updated_by = COALESCE(r.updated_by, updated_by)
     WHERE id = r.id AND (r.tenant_id IS NULL OR tenant_id = r.tenant_id)
-    RETURNING id, name, description, tenant_id, created_at, updated_at;
+    RETURNING id, name, description, tenant_id, created_at, updated_at, created_by, updated_by;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 

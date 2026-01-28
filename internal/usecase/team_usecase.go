@@ -60,14 +60,30 @@ func NewTeamUseCase(svc TeamServicer) *TeamUseCase {
 }
 
 func (uc *TeamUseCase) Create(ctx context.Context, input CreateTeamInput) (*TeamOutput, error) {
+	userID := ""
+	if val := ctx.Value("user_id"); val != nil {
+		userID = val.(string)
+	}
+
 	team := &domain.Team{
-		Name:     input.Name,
-		Status:   input.Status,
-		TenantID: utils.StringPtrOrNil(input.TenantID),
+		Name:      input.Name,
+		Status:    input.Status,
+		TenantID:  utils.StringPtrOrNil(input.TenantID),
+		CreatedBy: utils.StringPtrOrNil(userID),
+		UpdatedBy: utils.StringPtrOrNil(userID),
 	}
 
 	if err := uc.svc.Create(ctx, team); err != nil {
 		return nil, err
+	}
+
+	// Automatically add creator as owner
+	if userID != "" {
+		if _, err := uc.svc.AddMember(ctx, team.ID, userID, "OWNER"); err != nil {
+			// Log error but don't fail team creation?
+			// Actually, it's safer to fail or handle it.
+			return nil, err
+		}
 	}
 
 	return toTeamOutput(team), nil
@@ -119,6 +135,10 @@ func (uc *TeamUseCase) Update(ctx context.Context, id string, input UpdateTeamIn
 	}
 	if input.Status != nil {
 		team.Status = input.Status
+	}
+
+	if val := ctx.Value("user_id"); val != nil {
+		team.UpdatedBy = utils.StringPtrOrNil(val.(string))
 	}
 
 	if err := uc.svc.Update(ctx, team); err != nil {
