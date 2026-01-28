@@ -27,11 +27,7 @@ const (
 )
 
 func (r *UserRepo) Create(ctx context.Context, u *domain.User) error {
-	val, err := ExecQueryOne[domain.User](ctx, r.pool, queryUserCreate, NewUserRequest(u))
-	if err == nil {
-		*u = *val
-	}
-	return err
+	return ExecQueryUpdate(ctx, r.pool, u, queryUserCreate, NewUserRequest(u))
 }
 
 func (r *UserRepo) GetByID(ctx context.Context, id string) (*domain.User, error) {
@@ -39,16 +35,11 @@ func (r *UserRepo) GetByID(ctx context.Context, id string) (*domain.User, error)
 }
 
 func (r *UserRepo) Update(ctx context.Context, u *domain.User) error {
-	val, err := ExecQueryOne[domain.User](ctx, r.pool, queryUserUpdate, NewUserRequest(u))
-	if err == nil {
-		*u = *val
-	}
-	return err
+	return ExecQueryUpdate(ctx, r.pool, u, queryUserUpdate, NewUserRequest(u))
 }
 
 func (r *UserRepo) Delete(ctx context.Context, id string) error {
-	_, err := r.pool.Exec(ctx, queryUserDelete, UserRequest{ID: &id})
-	return err
+	return Exec(ctx, r.pool, queryUserDelete, UserRequest{ID: &id})
 }
 
 func (r *UserRepo) List(ctx context.Context, limit, offset int, teamID, tenantID string) ([]domain.User, error) {

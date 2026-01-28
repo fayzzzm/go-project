@@ -24,11 +24,7 @@ const (
 )
 
 func (r *CabinetRepo) Create(ctx context.Context, c *domain.Cabinet, userID string) error {
-	val, err := ExecQueryOne[domain.Cabinet](ctx, r.pool, queryCabinetCreate, NewCabinetRequest(c, &userID))
-	if err == nil {
-		*c = *val
-	}
-	return err
+	return ExecQueryUpdate(ctx, r.pool, c, queryCabinetCreate, NewCabinetRequest(c, &userID))
 }
 
 func (r *CabinetRepo) GetByID(ctx context.Context, id string) (*domain.Cabinet, error) {
@@ -36,16 +32,11 @@ func (r *CabinetRepo) GetByID(ctx context.Context, id string) (*domain.Cabinet, 
 }
 
 func (r *CabinetRepo) Update(ctx context.Context, c *domain.Cabinet) error {
-	val, err := ExecQueryOne[domain.Cabinet](ctx, r.pool, queryCabinetUpdate, NewCabinetRequest(c, nil))
-	if err == nil {
-		*c = *val
-	}
-	return err
+	return ExecQueryUpdate(ctx, r.pool, c, queryCabinetUpdate, NewCabinetRequest(c, nil))
 }
 
 func (r *CabinetRepo) Delete(ctx context.Context, id string) error {
-	_, err := r.pool.Exec(ctx, queryCabinetDelete, CabinetRequest{ID: &id})
-	return err
+	return Exec(ctx, r.pool, queryCabinetDelete, CabinetRequest{ID: &id})
 }
 
 func (r *CabinetRepo) List(ctx context.Context, limit, offset int) ([]domain.Cabinet, error) {

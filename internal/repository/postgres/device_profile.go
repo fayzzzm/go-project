@@ -24,11 +24,7 @@ const (
 )
 
 func (r *DeviceProfileRepo) Create(ctx context.Context, dp *domain.DeviceProfile) error {
-	val, err := ExecQueryOne[domain.DeviceProfile](ctx, r.pool, queryDeviceProfileCreate, NewDeviceProfileRequest(dp))
-	if err == nil {
-		*dp = *val
-	}
-	return err
+	return ExecQueryUpdate(ctx, r.pool, dp, queryDeviceProfileCreate, NewDeviceProfileRequest(dp))
 }
 
 func (r *DeviceProfileRepo) GetByID(ctx context.Context, id string) (*domain.DeviceProfile, error) {
@@ -36,16 +32,11 @@ func (r *DeviceProfileRepo) GetByID(ctx context.Context, id string) (*domain.Dev
 }
 
 func (r *DeviceProfileRepo) Update(ctx context.Context, dp *domain.DeviceProfile) error {
-	val, err := ExecQueryOne[domain.DeviceProfile](ctx, r.pool, queryDeviceProfileUpdate, NewDeviceProfileRequest(dp))
-	if err == nil {
-		*dp = *val
-	}
-	return err
+	return ExecQueryUpdate(ctx, r.pool, dp, queryDeviceProfileUpdate, NewDeviceProfileRequest(dp))
 }
 
 func (r *DeviceProfileRepo) Delete(ctx context.Context, id string) error {
-	_, err := r.pool.Exec(ctx, queryDeviceProfileDelete, DeviceProfileRequest{ID: &id})
-	return err
+	return Exec(ctx, r.pool, queryDeviceProfileDelete, DeviceProfileRequest{ID: &id})
 }
 
 func (r *DeviceProfileRepo) List(ctx context.Context, limit, offset int) ([]domain.DeviceProfile, error) {

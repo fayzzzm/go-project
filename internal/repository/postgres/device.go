@@ -27,11 +27,7 @@ const (
 )
 
 func (r *DeviceRepo) Create(ctx context.Context, d *domain.Device) error {
-	val, err := ExecQueryOne[domain.Device](ctx, r.pool, queryDeviceCreate, NewDeviceRequest(d))
-	if err == nil {
-		*d = *val
-	}
-	return err
+	return ExecQueryUpdate(ctx, r.pool, d, queryDeviceCreate, NewDeviceRequest(d))
 }
 
 func (r *DeviceRepo) GetByID(ctx context.Context, id string) (*domain.Device, error) {
@@ -39,16 +35,11 @@ func (r *DeviceRepo) GetByID(ctx context.Context, id string) (*domain.Device, er
 }
 
 func (r *DeviceRepo) Update(ctx context.Context, d *domain.Device) error {
-	val, err := ExecQueryOne[domain.Device](ctx, r.pool, queryDeviceUpdate, NewDeviceRequest(d))
-	if err == nil {
-		*d = *val
-	}
-	return err
+	return ExecQueryUpdate(ctx, r.pool, d, queryDeviceUpdate, NewDeviceRequest(d))
 }
 
 func (r *DeviceRepo) Delete(ctx context.Context, id string) error {
-	_, err := r.pool.Exec(ctx, queryDeviceDelete, DeviceRequest{ID: &id})
-	return err
+	return Exec(ctx, r.pool, queryDeviceDelete, DeviceRequest{ID: &id})
 }
 
 func (r *DeviceRepo) List(ctx context.Context, limit, offset int) ([]domain.Device, error) {

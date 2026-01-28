@@ -40,11 +40,7 @@ func (r *TeamRepo) AddMember(ctx context.Context, teamID, userID, role string) (
 }
 
 func (r *TeamRepo) Create(ctx context.Context, t *domain.Team) error {
-	val, err := ExecQueryOne[domain.Team](ctx, r.pool, queryTeamCreate, NewTeamRequest(t))
-	if err == nil {
-		*t = *val
-	}
-	return err
+	return ExecQueryUpdate(ctx, r.pool, t, queryTeamCreate, NewTeamRequest(t))
 }
 
 func (r *TeamRepo) GetByID(ctx context.Context, id string) (*domain.Team, error) {
@@ -52,16 +48,11 @@ func (r *TeamRepo) GetByID(ctx context.Context, id string) (*domain.Team, error)
 }
 
 func (r *TeamRepo) Update(ctx context.Context, t *domain.Team) error {
-	val, err := ExecQueryOne[domain.Team](ctx, r.pool, queryTeamUpdate, NewTeamRequest(t))
-	if err == nil {
-		*t = *val
-	}
-	return err
+	return ExecQueryUpdate(ctx, r.pool, t, queryTeamUpdate, NewTeamRequest(t))
 }
 
 func (r *TeamRepo) Delete(ctx context.Context, id string) error {
-	_, err := r.pool.Exec(ctx, queryTeamDelete, TeamRequest{ID: &id})
-	return err
+	return Exec(ctx, r.pool, queryTeamDelete, TeamRequest{ID: &id})
 }
 
 func (r *TeamRepo) List(ctx context.Context, limit, offset int, tenantID, userID string) ([]domain.Team, error) {
