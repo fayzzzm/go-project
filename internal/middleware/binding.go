@@ -9,10 +9,12 @@ import (
 // BodyContextKey is the key used to store the parsed body in the context.
 const BodyContextKey = "request_body"
 
-// BindJSON is a generic middleware that binds the request body to a struct of type T.
+// BindJSON is a generic middleware that binds and validates the request body.
 func BindJSON[T any]() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var input T
+
+		// This call now handles BOTH: JSON unmarshalling AND our custom validation
 		if err := c.ShouldBindJSON(&input); err != nil {
 			_ = c.Error(err).SetType(gin.ErrorTypeBind)
 			c.Abort()

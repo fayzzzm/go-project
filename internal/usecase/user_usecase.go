@@ -18,11 +18,11 @@ type UserServicer interface {
 }
 
 type CreateUserInput struct {
-	Email        string                 `json:"email" binding:"required,email"`
-	Name         string                 `json:"name" binding:"required"`
+	Email        string                 `json:"email" validate:"required,email"`
+	Name         string                 `json:"name" validate:"required"`
 	Address      string                 `json:"address"`
 	Phone        string                 `json:"phone"`
-	Password     string                 `json:"password" binding:"required,min=6"`
+	Password     string                 `json:"password" validate:"required,min=6"`
 	AppMetadata  map[string]interface{} `json:"app_metadata"`
 	UserMetadata map[string]interface{} `json:"user_metadata"`
 }

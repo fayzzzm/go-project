@@ -1,7 +1,5 @@
 package domain
 
-import "errors"
-
 const (
 	// Error Codes
 	CodeValidationFailed      = "VALIDATION_FAILED"
@@ -29,13 +27,21 @@ const (
 	PGCustomException     = "P0001" // Used by RAISE EXCEPTION in PL/pgSQL
 )
 
+// DomainError is a structured error with a machine-readable code
+type DomainError struct {
+	Code       string
+	Message    string
+	HTTPStatus int
+}
+
+func (e *DomainError) Error() string { return e.Message }
+
 var (
-	// Standard Errors
-	ErrNotFound           = errors.New("resource not found")
-	ErrConflict           = errors.New("resource already exists") // duplicate key
-	ErrInternal           = errors.New("internal system error")
-	ErrInvalidInput       = errors.New("invalid input parameter")
-	ErrUnauthorized       = errors.New("unauthorized access")
-	ErrForbidden          = errors.New("access forbidden")
-	ErrInvalidCredentials = errors.New("invalid credentials")
+	ErrNotFound           = &DomainError{Code: CodeNotFound, Message: "resource not found", HTTPStatus: 404}
+	ErrConflict           = &DomainError{Code: CodeConflict, Message: "resource already exists", HTTPStatus: 409}
+	ErrInvalidInput       = &DomainError{Code: CodeInvalidInput, Message: "invalid input parameter", HTTPStatus: 400}
+	ErrUnauthorized       = &DomainError{Code: CodeUnauthorized, Message: "unauthorized access", HTTPStatus: 401}
+	ErrForbidden          = &DomainError{Code: CodeForbidden, Message: "access forbidden", HTTPStatus: 403}
+	ErrInvalidCredentials = &DomainError{Code: CodeInvalidCredentials, Message: "invalid credentials", HTTPStatus: 401}
+	ErrInternal           = &DomainError{Code: CodeInternalError, Message: "internal system error", HTTPStatus: 500}
 )

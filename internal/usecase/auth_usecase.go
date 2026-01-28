@@ -19,8 +19,8 @@ type AuthServicer interface {
 // To keep it simple, I will use UserServicer dependency but only call GetForLogin.
 
 type LoginInput struct {
-	Email    string `json:"email" binding:"required,email"`
-	Password string `json:"password" binding:"required"`
+	Email    string `json:"email" validate:"required,email"`
+	Password string `json:"password" validate:"required"`
 }
 
 type LoginOutput struct {

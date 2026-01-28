@@ -7,7 +7,7 @@
 @createdProfileId = {{paste_profile_id}}
 
 @password = password123
-@authToken = {{paste_auth_token}}
+@authToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFkbWluQGl0c3dhcmUuY29tIiwiZXhwIjoxNzY5NzI3NDMxLCJyb2xlIjoiYWRtaW4iLCJzdWIiOiJhYWFhMTExMS1hYWFhLWFhYWEtYWFhYS1hYWFhYWFhYWFhYWEiLCJ0ZW5hbnRfaWQiOiJhMGVlYmM5OS05YzBiLTRlZjgtYmI2ZC02YmI5YmQzODBhMTEifQ.V-OLQ79FERNpETF_1hCuLL4NZ2ehHPwn_hhar7tnG9M
 ### ============================================================================
 ### TENANTS
 ### ============================================================================

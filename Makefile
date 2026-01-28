@@ -5,7 +5,7 @@ up:
 	docker compose up -d
 
 down:
-	docker compose down
+	docker compose down -v
 
 restart: down up
 
@@ -14,10 +14,10 @@ logs:
 
 # Application Commands
 run:
-	go run cmd/api/main.go
+	go run cmd/main.go
 
 build:
-	go build -o bin/api cmd/api/main.go
+	go build -o bin/api cmd/main.go
 
 # Database Seeding
 seed:

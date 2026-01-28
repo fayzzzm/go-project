@@ -20,7 +20,7 @@ type TeamServicer interface {
 }
 
 type CreateTeamInput struct {
-	Name   string  `json:"name" binding:"required"`
+	Name   string  `json:"name" validate:"required"`
 	Status *string `json:"status"`
 }
 
@@ -40,7 +40,7 @@ type ListForUserInput struct {
 
 type AddMemberInput struct {
 	TeamID string `json:"-"`
-	UserID string `json:"user_id" binding:"required,uuid"`
+	UserID string `json:"user_id" validate:"required,uuid"`
 	Role   string `json:"role"`
 }
 

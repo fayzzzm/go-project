@@ -11,6 +11,7 @@ import (
 	"github.com/fayzzzm/go-project/internal/repository/postgres"
 	"github.com/fayzzzm/go-project/internal/service"
 	"github.com/fayzzzm/go-project/internal/usecase"
+	"github.com/fayzzzm/go-project/pkg/validate"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -22,11 +23,15 @@ import (
 func main() {
 	_ = godotenv.Load()
 
+	// 0. Register our custom validator globally with Gin
+	validate.RegisterGinValidator()
+
 	fx.New(
 		fx.Provide(
 			NewDatabasePool,
 			NewGinEngine,
 			NewAPIGroup,
+			validate.NewValidator,
 
 			// 1. Repositories -> Service Interfaces (Consumer defined)
 			fx.Annotate(

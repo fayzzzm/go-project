@@ -17,9 +17,9 @@ type DeviceServicer interface {
 }
 
 type CreateDeviceInput struct {
-	Name            string  `json:"name" binding:"required"`
+	Name            string  `json:"name" validate:"required"`
 	Description     *string `json:"description"`
-	SerialNumber    string  `json:"serial_number" binding:"required"`
+	SerialNumber    string  `json:"serial_number" validate:"required"`
 	EPC             *string `json:"epc"`
 	DeviceProfileID *string `json:"device_profile_id"`
 	CabinetID       *string `json:"cabinet_id"`
