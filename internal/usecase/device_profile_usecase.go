@@ -17,9 +17,9 @@ type DeviceProfileServicer interface {
 }
 
 type CreateDeviceProfileInput struct {
-	Name        string `json:"name" binding:"required"`
-	Description string `json:"description"`
-	TenantID    string `json:"tenant_id" binding:"required"`
+	Name        string  `json:"name" binding:"required"`
+	Description *string `json:"description"`
+	TenantID    string  `json:"tenant_id"` // Injected by middleware
 }
 
 type UpdateDeviceProfileInput struct {
@@ -47,7 +47,7 @@ func NewDeviceProfileUseCase(svc DeviceProfileServicer) *DeviceProfileUseCase {
 func (uc *DeviceProfileUseCase) Create(ctx context.Context, input CreateDeviceProfileInput) (*DeviceProfileOutput, error) {
 	dp := &domain.DeviceProfile{
 		Name:        input.Name,
-		Description: utils.StringPtrOrNil(input.Description),
+		Description: input.Description,
 		TenantID:    utils.StringPtrOrNil(input.TenantID),
 	}
 

@@ -15,7 +15,7 @@ type DeviceUseCase interface {
 	Create(ctx context.Context, input usecase.CreateDeviceInput) (*usecase.DeviceOutput, error)
 	GetByID(ctx context.Context, id string) (*usecase.DeviceOutput, error)
 	List(ctx context.Context, p domain.Pagination) ([]usecase.DeviceOutput, error)
-	Update(ctx context.Context, id string, input usecase.CreateDeviceInput) (*usecase.DeviceOutput, error)
+	Update(ctx context.Context, id string, input usecase.UpdateDeviceInput) (*usecase.DeviceOutput, error)
 	Delete(ctx context.Context, id string) error
 }
 
@@ -32,7 +32,7 @@ func NewDeviceController(r gin.IRouter, uc DeviceUseCase) {
 		devices.POST("", middleware.BindJSON[usecase.CreateDeviceInput](), utils.Handle(c.Create, http.StatusCreated))
 		devices.GET("/:id", utils.Handle(c.GetByID, http.StatusOK))
 		devices.GET("", utils.Handle(c.List, http.StatusOK))
-		devices.PUT("/:id", middleware.BindJSON[usecase.CreateDeviceInput](), utils.Handle(c.Update, http.StatusOK))
+		devices.PUT("/:id", middleware.BindJSON[usecase.UpdateDeviceInput](), utils.Handle(c.Update, http.StatusOK))
 		devices.DELETE("/:id", utils.Handle(c.Delete, http.StatusNoContent))
 	}
 }
@@ -50,7 +50,7 @@ func (c *DeviceController) List(ctx *gin.Context) ([]usecase.DeviceOutput, error
 }
 
 func (c *DeviceController) Update(ctx *gin.Context) (*usecase.DeviceOutput, error) {
-	return c.uc.Update(ctx.Request.Context(), ctx.Param("id"), middleware.GetBody[usecase.CreateDeviceInput](ctx))
+	return c.uc.Update(ctx.Request.Context(), ctx.Param("id"), middleware.GetBody[usecase.UpdateDeviceInput](ctx))
 }
 
 func (c *DeviceController) Delete(ctx *gin.Context) (struct{}, error) {

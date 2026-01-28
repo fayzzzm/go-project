@@ -17,14 +17,24 @@ type DeviceServicer interface {
 }
 
 type CreateDeviceInput struct {
-	Name            string `json:"name" binding:"required"`
-	Description     string `json:"description"`
-	SerialNumber    string `json:"serial_number" binding:"required"`
-	EPC             string `json:"epc"`
-	DeviceProfileID string `json:"device_profile_id"`
-	CabinetID       string `json:"cabinet_id"`
-	TeamID          string `json:"team_id"`
-	TenantID        string `json:"tenant_id" binding:"required"`
+	Name            string  `json:"name" binding:"required"`
+	Description     *string `json:"description"`
+	SerialNumber    string  `json:"serial_number" binding:"required"`
+	EPC             *string `json:"epc"`
+	DeviceProfileID *string `json:"device_profile_id"`
+	CabinetID       *string `json:"cabinet_id"`
+	TeamID          *string `json:"team_id"`
+	TenantID        string  `json:"tenant_id"` // Injected by middleware
+}
+
+type UpdateDeviceInput struct {
+	Name            *string `json:"name"`
+	Description     *string `json:"description"`
+	SerialNumber    *string `json:"serial_number"`
+	EPC             *string `json:"epc"`
+	DeviceProfileID *string `json:"device_profile_id"`
+	CabinetID       *string `json:"cabinet_id"`
+	TeamID          *string `json:"team_id"`
 }
 
 type DeviceOutput struct {
@@ -46,12 +56,12 @@ func NewDeviceUseCase(svc DeviceServicer) *DeviceUseCase {
 func (uc *DeviceUseCase) Create(ctx context.Context, input CreateDeviceInput) (*DeviceOutput, error) {
 	device := &domain.Device{
 		Name:            input.Name,
-		Description:     utils.StringPtrOrNil(input.Description),
+		Description:     input.Description,
 		SerialNumber:    input.SerialNumber,
-		EPC:             utils.StringPtrOrNil(input.EPC),
-		DeviceProfileID: utils.StringPtrOrNil(input.DeviceProfileID),
-		CabinetID:       utils.StringPtrOrNil(input.CabinetID),
-		TeamID:          utils.StringPtrOrNil(input.TeamID),
+		EPC:             input.EPC,
+		DeviceProfileID: input.DeviceProfileID,
+		CabinetID:       input.CabinetID,
+		TeamID:          input.TeamID,
 		TenantID:        utils.StringPtrOrNil(input.TenantID),
 	}
 
@@ -85,17 +95,32 @@ func (uc *DeviceUseCase) List(ctx context.Context, p domain.Pagination) ([]Devic
 	return output, nil
 }
 
-func (uc *DeviceUseCase) Update(ctx context.Context, id string, input CreateDeviceInput) (*DeviceOutput, error) {
-	device := &domain.Device{
-		ID:              id,
-		Name:            input.Name,
-		Description:     utils.StringPtrOrNil(input.Description),
-		SerialNumber:    input.SerialNumber,
-		EPC:             utils.StringPtrOrNil(input.EPC),
-		DeviceProfileID: utils.StringPtrOrNil(input.DeviceProfileID),
-		CabinetID:       utils.StringPtrOrNil(input.CabinetID),
-		TeamID:          utils.StringPtrOrNil(input.TeamID),
-		TenantID:        utils.StringPtrOrNil(input.TenantID),
+func (uc *DeviceUseCase) Update(ctx context.Context, id string, input UpdateDeviceInput) (*DeviceOutput, error) {
+	device, err := uc.svc.GetByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	if input.Name != nil {
+		device.Name = *input.Name
+	}
+	if input.Description != nil {
+		device.Description = input.Description
+	}
+	if input.SerialNumber != nil {
+		device.SerialNumber = *input.SerialNumber
+	}
+	if input.EPC != nil {
+		device.EPC = input.EPC
+	}
+	if input.DeviceProfileID != nil {
+		device.DeviceProfileID = input.DeviceProfileID
+	}
+	if input.CabinetID != nil {
+		device.CabinetID = input.CabinetID
+	}
+	if input.TeamID != nil {
+		device.TeamID = input.TeamID
 	}
 
 	if err := uc.svc.Update(ctx, device); err != nil {

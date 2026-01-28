@@ -20,9 +20,9 @@ type TeamServicer interface {
 }
 
 type CreateTeamInput struct {
-	Name     string `json:"name" binding:"required"`
-	Status   string `json:"status"`
-	TenantID string `json:"tenant_id" binding:"required"`
+	Name     string  `json:"name" binding:"required"`
+	Status   *string `json:"status"`
+	TenantID string  `json:"tenant_id"` // Injected by middleware
 }
 
 type UpdateTeamInput struct {
@@ -62,7 +62,7 @@ func NewTeamUseCase(svc TeamServicer) *TeamUseCase {
 func (uc *TeamUseCase) Create(ctx context.Context, input CreateTeamInput) (*TeamOutput, error) {
 	team := &domain.Team{
 		Name:     input.Name,
-		Status:   utils.StringPtrOrNil(input.Status),
+		Status:   input.Status,
 		TenantID: utils.StringPtrOrNil(input.TenantID),
 	}
 
