@@ -22,7 +22,6 @@ Content-Type: application/json
 GET {{baseUrl}}/tenants/users
 Authorization: Bearer {{authToken}}
 Content-Type: application/json
-X-Tenant-ID: {{tenantId}}
 
 ### ============================================================================
 ### AUTHENTICATION
@@ -48,7 +47,6 @@ Content-Type: application/json
 POST {{baseUrl}}/users
 Content-Type: application/json
 Authorization: Bearer {{authToken}}
-X-Tenant-ID: {{tenantId}}
 
 {
     "email": "developer1@itsware.com",
@@ -69,13 +67,11 @@ X-Tenant-ID: {{tenantId}}
 GET {{baseUrl}}/users/{{createdUserId}}
 Content-Type: application/json
 Authorization: Bearer {{authToken}}
-X-Tenant-ID: {{tenantId}}
 
 ### 4. Update User
 PUT {{baseUrl}}/users/{{createdUserId}}
 Content-Type: application/json
 Authorization: Bearer {{authToken}}
-X-Tenant-ID: {{tenantId}}
 
 {
     "name": "Lalante Developer"
@@ -85,7 +81,6 @@ X-Tenant-ID: {{tenantId}}
 DELETE {{baseUrl}}/users/{{createdUserId}}
 Content-Type: application/json
 Authorization: Bearer {{authToken}}
-X-Tenant-ID: {{tenantId}}
 
 
 ### ============================================================================
@@ -97,7 +92,6 @@ X-Tenant-ID: {{tenantId}}
 POST {{baseUrl}}/teams
 Content-Type: application/json
 Authorization: Bearer {{authToken}}
-X-Tenant-ID: {{tenantId}}
 
 {
     "name": "Lalante Ops Team",
@@ -108,14 +102,12 @@ X-Tenant-ID: {{tenantId}}
 GET {{baseUrl}}/teams
 Content-Type: application/json
 Authorization: Bearer {{authToken}}
-X-Tenant-ID: {{tenantId}}
 
 ### 9. Add Member to Team
 # @name addMember
 POST {{baseUrl}}/teams/{{createdTeamId}}/members
 Content-Type: application/json
 Authorization: Bearer {{authToken}}
-X-Tenant-ID: {{tenantId}}
 
 {
     "user_id": "{{createdUserId}}",
@@ -126,7 +118,6 @@ X-Tenant-ID: {{tenantId}}
 GET {{baseUrl}}/teams?user_id={{createdUserId}}
 Content-Type: application/json
 Authorization: Bearer {{authToken}}
-X-Tenant-ID: {{tenantId}}
 
 
 ### ============================================================================
@@ -138,7 +129,6 @@ X-Tenant-ID: {{tenantId}}
 POST {{baseUrl}}/cabinets
 Content-Type: application/json
 Authorization: Bearer {{authToken}}
-X-Tenant-ID: {{tenantId}}
 
 {
     "name": "Main Server Rack",
@@ -149,7 +139,6 @@ X-Tenant-ID: {{tenantId}}
 ### 12. List Cabinets
 GET {{baseUrl}}/cabinets
 Content-Type: application/json
-X-Tenant-ID: {{tenantId}}
 Authorization: Bearer {{authToken}}
 
 
@@ -162,7 +151,6 @@ Authorization: Bearer {{authToken}}
 POST {{baseUrl}}/device_profiles
 Content-Type: application/json
 Authorization: Bearer {{authToken}}
-X-Tenant-ID: {{tenantId}}
 
 {
     "name": "Handheld RFID Reader",
@@ -173,7 +161,6 @@ X-Tenant-ID: {{tenantId}}
 GET {{baseUrl}}/device_profiles
 Content-Type: application/json
 Authorization: Bearer {{authToken}}
-X-Tenant-ID: {{tenantId}}
 
 
 ### ============================================================================
@@ -185,7 +172,6 @@ X-Tenant-ID: {{tenantId}}
 POST {{baseUrl}}/devices
 Content-Type: application/json
 Authorization: Bearer {{authToken}}
-X-Tenant-ID: {{tenantId}}
 
 {
     "name": "RFID Reader X12",
@@ -195,27 +181,23 @@ X-Tenant-ID: {{tenantId}}
     "device_profile_id": "{{createdProfileId}}",
     "cabinet_id": "{{createdCabinetId}}",
     "team_id": "{{createdTeamId}}",
-    "tenant_id": "{{tenantId}}"
 }
 
 ### 16. List Devices
 GET {{baseUrl}}/devices
 Content-Type: application/json
 Authorization: Bearer {{authToken}}
-X-Tenant-ID: {{tenantId}}
 
 
 ### 17. Get Device By ID
 GET {{baseUrl}}/devices/{{createdDeviceId}}
 Content-Type: application/json
 Authorization: Bearer {{authToken}}
-X-Tenant-ID: {{tenantId}}
 
 ### 18. Update Device
 PUT {{baseUrl}}/devices/{{createdDeviceId}}
 Content-Type: application/json
 Authorization: Bearer {{authToken}}
-X-Tenant-ID: {{tenantId}}
 
 {
     "name": "RFID Reader X1 (Updated)",
@@ -227,4 +209,3 @@ X-Tenant-ID: {{tenantId}}
 DELETE {{baseUrl}}/devices/{{createdDeviceId}}
 Content-Type: application/json
 Authorization: Bearer {{authToken}}
-X-Tenant-ID: {{tenantId}}

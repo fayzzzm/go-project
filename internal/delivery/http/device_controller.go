@@ -4,7 +4,6 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/fayzzzm/go-project/internal/domain"
 	"github.com/fayzzzm/go-project/internal/middleware"
 	"github.com/fayzzzm/go-project/internal/usecase"
 	"github.com/fayzzzm/go-project/pkg/utils"
@@ -13,10 +12,10 @@ import (
 
 type DeviceUseCase interface {
 	Create(ctx context.Context, input usecase.CreateDeviceInput) (*usecase.DeviceOutput, error)
-	GetByID(ctx context.Context, id string) (*usecase.DeviceOutput, error)
-	List(ctx context.Context, p domain.Pagination) ([]usecase.DeviceOutput, error)
-	Update(ctx context.Context, id string, input usecase.UpdateDeviceInput) (*usecase.DeviceOutput, error)
-	Delete(ctx context.Context, id string) error
+	GetByID(ctx context.Context, input usecase.DeviceIDInput) (*usecase.DeviceOutput, error)
+	List(ctx context.Context, input usecase.ListDeviceInput) ([]usecase.DeviceOutput, error)
+	Update(ctx context.Context, input usecase.UpdateDeviceInput) (*usecase.DeviceOutput, error)
+	Delete(ctx context.Context, input usecase.DeviceIDInput) error
 }
 
 type DeviceController struct {
@@ -42,17 +41,17 @@ func (c *DeviceController) Create(ctx *gin.Context) (*usecase.DeviceOutput, erro
 }
 
 func (c *DeviceController) GetByID(ctx *gin.Context) (*usecase.DeviceOutput, error) {
-	return c.uc.GetByID(ctx.Request.Context(), ctx.Param("id"))
+	return c.uc.GetByID(ctx.Request.Context(), usecase.DeviceIDInput{ID: ctx.Param("id")})
 }
 
 func (c *DeviceController) List(ctx *gin.Context) ([]usecase.DeviceOutput, error) {
-	return c.uc.List(ctx.Request.Context(), middleware.GetPagination(ctx))
+	return c.uc.List(ctx.Request.Context(), usecase.ListDeviceInput{Pagination: middleware.GetPagination(ctx)})
 }
 
 func (c *DeviceController) Update(ctx *gin.Context) (*usecase.DeviceOutput, error) {
-	return c.uc.Update(ctx.Request.Context(), ctx.Param("id"), middleware.GetBody[usecase.UpdateDeviceInput](ctx))
+	return c.uc.Update(ctx.Request.Context(), middleware.GetBodyWithID[usecase.UpdateDeviceInput](ctx, "id"))
 }
 
 func (c *DeviceController) Delete(ctx *gin.Context) (struct{}, error) {
-	return struct{}{}, c.uc.Delete(ctx.Request.Context(), ctx.Param("id"))
+	return struct{}{}, c.uc.Delete(ctx.Request.Context(), usecase.DeviceIDInput{ID: ctx.Param("id")})
 }

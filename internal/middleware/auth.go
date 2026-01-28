@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"context"
 	"errors"
 	"net/http"
 	"os"
@@ -68,8 +67,8 @@ func AuthMiddleware() gin.HandlerFunc {
 
 		if sub, ok := claims["sub"].(string); ok {
 			c.Set(ContextUserID, sub)
-			// Propagate UserID to Request Context
-			c.Request = c.Request.WithContext(context.WithValue(c.Request.Context(), ContextUserID, sub))
+			// Propagate UserID to Request Context using domain helper
+			c.Request = c.Request.WithContext(domain.ContextWithUser(c.Request.Context(), sub))
 		}
 		if role, ok := claims["role"].(string); ok {
 			c.Set(ContextUserRole, role)
@@ -93,16 +92,14 @@ func GetUserID(c *gin.Context) (string, error) {
 	return val.(string), nil
 }
 
-// GetTenantID retrieves the TenantID from context (Token) or Header
+// GetTenantID retrieves the TenantID from context (Token)
 func GetTenantID(c *gin.Context) string {
-	// 1. Try Token
 	if val, exists := c.Get(ContextTenantID); exists {
 		if tid, ok := val.(string); ok && tid != "" {
 			return tid
 		}
 	}
-	// 2. Try Header
-	return c.GetHeader("X-Tenant-ID")
+	return ""
 }
 
 // GetUserRole retrieves the UserRole from context
@@ -128,48 +125,18 @@ func RequireRole(roles ...string) gin.HandlerFunc {
 	}
 }
 
-// RequireTenant ensures a valid tenant ID is present in the header or token, and matches if both exist.
+// RequireTenant ensures a valid tenant ID is present in the token.
 func RequireTenant() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		tokenTenantID := ""
-		if val, exists := c.Get(ContextTenantID); exists {
-			tokenTenantID = val.(string)
-		}
+		tenantID := GetTenantID(c)
 
-		headerTenantID := c.GetHeader("X-Tenant-ID")
-		userRole := GetUserRole(c)
-
-		// Determine the active tenant
-		activeTenantID := ""
-
-		if userRole == "super-admin" {
-			// Super admin can specify any tenant via header, or falls back to their own
-			if headerTenantID != "" {
-				activeTenantID = headerTenantID
-			} else {
-				activeTenantID = tokenTenantID
-			}
-		} else {
-			// For regular users, if header is provided, it MUST match the token
-			if headerTenantID != "" {
-				if tokenTenantID != "" && headerTenantID != tokenTenantID {
-					c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "Access denied: tenant mismatch"})
-					return
-				}
-				activeTenantID = headerTenantID
-			} else {
-				activeTenantID = tokenTenantID
-			}
-		}
-
-		if activeTenantID == "" {
-			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Tenant ID is required (X-Tenant-ID header or token)"})
+		if tenantID == "" {
+			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "Tenant ID is required in the token"})
 			return
 		}
 
-		// Update both Gin context and Go context
-		c.Set(ContextTenantID, activeTenantID)
-		c.Request = c.Request.WithContext(domain.ContextWithTenant(c.Request.Context(), activeTenantID))
+		// Ensure Go context is also updated (though AuthMiddleware already does this, safety first)
+		c.Request = c.Request.WithContext(domain.ContextWithTenant(c.Request.Context(), tenantID))
 
 		c.Next()
 	}

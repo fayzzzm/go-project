@@ -13,12 +13,12 @@ import (
 
 type TeamUseCase interface {
 	Create(ctx context.Context, input usecase.CreateTeamInput) (*usecase.TeamOutput, error)
-	GetByID(ctx context.Context, id string) (*usecase.TeamOutput, error)
-	List(ctx context.Context, p domain.Pagination, tenantID, userID string) ([]usecase.TeamOutput, error)
-	ListForUser(ctx context.Context, userID string) ([]usecase.TeamOutput, error)
-	Update(ctx context.Context, id string, input usecase.UpdateTeamInput) (*usecase.TeamOutput, error)
-	Delete(ctx context.Context, id string) error
-	AddMember(ctx context.Context, teamID string, input usecase.AddMemberInput) (*usecase.MemberOutput, error)
+	GetByID(ctx context.Context, input usecase.TeamIDInput) (*usecase.TeamOutput, error)
+	List(ctx context.Context, p domain.Pagination) ([]usecase.TeamOutput, error)
+	ListForUser(ctx context.Context, input usecase.ListForUserInput) ([]usecase.TeamOutput, error)
+	Update(ctx context.Context, input usecase.UpdateTeamInput) (*usecase.TeamOutput, error)
+	Delete(ctx context.Context, input usecase.TeamIDInput) error
+	AddMember(ctx context.Context, input usecase.AddMemberInput) (*usecase.MemberOutput, error)
 }
 
 type TeamController struct {
@@ -45,24 +45,24 @@ func (c *TeamController) Create(ctx *gin.Context) (*usecase.TeamOutput, error) {
 }
 
 func (c *TeamController) GetByID(ctx *gin.Context) (*usecase.TeamOutput, error) {
-	return c.uc.GetByID(ctx.Request.Context(), ctx.Param("id"))
+	return c.uc.GetByID(ctx.Request.Context(), usecase.TeamIDInput{ID: ctx.Param("id")})
 }
 
 func (c *TeamController) List(ctx *gin.Context) ([]usecase.TeamOutput, error) {
 	if filterUserID := ctx.Query("user_id"); filterUserID != "" {
-		return c.uc.ListForUser(ctx.Request.Context(), filterUserID)
+		return c.uc.ListForUser(ctx.Request.Context(), usecase.ListForUserInput{UserID: filterUserID})
 	}
-	return c.uc.List(ctx.Request.Context(), middleware.GetPagination(ctx), middleware.GetTenantID(ctx), ctx.GetString(middleware.ContextUserID))
+	return c.uc.List(ctx.Request.Context(), middleware.GetPagination(ctx))
 }
 
 func (c *TeamController) Update(ctx *gin.Context) (*usecase.TeamOutput, error) {
-	return c.uc.Update(ctx.Request.Context(), ctx.Param("id"), middleware.GetBody[usecase.UpdateTeamInput](ctx))
+	return c.uc.Update(ctx.Request.Context(), middleware.GetBodyWithID[usecase.UpdateTeamInput](ctx, "id"))
 }
 
 func (c *TeamController) Delete(ctx *gin.Context) (struct{}, error) {
-	return struct{}{}, c.uc.Delete(ctx.Request.Context(), ctx.Param("id"))
+	return struct{}{}, c.uc.Delete(ctx.Request.Context(), usecase.TeamIDInput{ID: ctx.Param("id")})
 }
 
 func (c *TeamController) AddMember(ctx *gin.Context) (*usecase.MemberOutput, error) {
-	return c.uc.AddMember(ctx.Request.Context(), ctx.Param("id"), middleware.GetBody[usecase.AddMemberInput](ctx))
+	return c.uc.AddMember(ctx.Request.Context(), middleware.GetBodyWithID[usecase.AddMemberInput](ctx, "id"))
 }

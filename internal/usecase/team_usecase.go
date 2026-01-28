@@ -20,17 +20,26 @@ type TeamServicer interface {
 }
 
 type CreateTeamInput struct {
-	Name     string  `json:"name" binding:"required"`
-	Status   *string `json:"status"`
-	TenantID string  `json:"tenant_id"` // Injected by middleware
+	Name   string  `json:"name" binding:"required"`
+	Status *string `json:"status"`
 }
 
 type UpdateTeamInput struct {
+	ID     string  `json:"-"`
 	Name   *string `json:"name"`
 	Status *string `json:"status"`
 }
 
+type TeamIDInput struct {
+	ID string `json:"-"`
+}
+
+type ListForUserInput struct {
+	UserID string `json:"-"`
+}
+
 type AddMemberInput struct {
+	TeamID string `json:"-"`
 	UserID string `json:"user_id" binding:"required,uuid"`
 	Role   string `json:"role"`
 }
@@ -68,7 +77,6 @@ func (uc *TeamUseCase) Create(ctx context.Context, input CreateTeamInput) (*Team
 	team := &domain.Team{
 		Name:      input.Name,
 		Status:    input.Status,
-		TenantID:  utils.StringPtrOrNil(input.TenantID),
 		CreatedBy: utils.StringPtrOrNil(userID),
 		UpdatedBy: utils.StringPtrOrNil(userID),
 	}
@@ -79,7 +87,7 @@ func (uc *TeamUseCase) Create(ctx context.Context, input CreateTeamInput) (*Team
 
 	// Automatically add creator as owner
 	if userID != "" {
-		if _, err := uc.svc.AddMember(ctx, team.ID, userID, "OWNER"); err != nil {
+		if _, err := uc.svc.AddMember(ctx, team.ID, userID, domain.TeamRoleOwner); err != nil {
 			// Log error but don't fail team creation?
 			// Actually, it's safer to fail or handle it.
 			return nil, err
@@ -89,15 +97,18 @@ func (uc *TeamUseCase) Create(ctx context.Context, input CreateTeamInput) (*Team
 	return toTeamOutput(team), nil
 }
 
-func (uc *TeamUseCase) GetByID(ctx context.Context, id string) (*TeamOutput, error) {
-	team, err := uc.svc.GetByID(ctx, id)
+func (uc *TeamUseCase) GetByID(ctx context.Context, input TeamIDInput) (*TeamOutput, error) {
+	team, err := uc.svc.GetByID(ctx, input.ID)
 	if err != nil {
 		return nil, err
 	}
 	return toTeamOutput(team), nil
 }
 
-func (uc *TeamUseCase) List(ctx context.Context, p domain.Pagination, tenantID, userID string) ([]TeamOutput, error) {
+func (uc *TeamUseCase) List(ctx context.Context, p domain.Pagination) ([]TeamOutput, error) {
+	tenantID := domain.TenantFromContext(ctx)
+	userID := domain.UserFromContext(ctx)
+
 	p.Normalize()
 	teams, err := uc.svc.List(ctx, p.Limit, p.Offset, tenantID, userID)
 	if err != nil {
@@ -111,8 +122,8 @@ func (uc *TeamUseCase) List(ctx context.Context, p domain.Pagination, tenantID, 
 	return output, nil
 }
 
-func (uc *TeamUseCase) ListForUser(ctx context.Context, userID string) ([]TeamOutput, error) {
-	teams, err := uc.svc.GetForUser(ctx, userID)
+func (uc *TeamUseCase) ListForUser(ctx context.Context, input ListForUserInput) ([]TeamOutput, error) {
+	teams, err := uc.svc.GetForUser(ctx, input.UserID)
 	if err != nil {
 		return nil, err
 	}
@@ -124,8 +135,8 @@ func (uc *TeamUseCase) ListForUser(ctx context.Context, userID string) ([]TeamOu
 	return output, nil
 }
 
-func (uc *TeamUseCase) Update(ctx context.Context, id string, input UpdateTeamInput) (*TeamOutput, error) {
-	team, err := uc.svc.GetByID(ctx, id)
+func (uc *TeamUseCase) Update(ctx context.Context, input UpdateTeamInput) (*TeamOutput, error) {
+	team, err := uc.svc.GetByID(ctx, input.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -147,12 +158,12 @@ func (uc *TeamUseCase) Update(ctx context.Context, id string, input UpdateTeamIn
 	return toTeamOutput(team), nil
 }
 
-func (uc *TeamUseCase) Delete(ctx context.Context, id string) error {
-	return uc.svc.Delete(ctx, id)
+func (uc *TeamUseCase) Delete(ctx context.Context, input TeamIDInput) error {
+	return uc.svc.Delete(ctx, input.ID)
 }
 
-func (uc *TeamUseCase) AddMember(ctx context.Context, teamID string, input AddMemberInput) (*MemberOutput, error) {
-	member, err := uc.svc.AddMember(ctx, teamID, input.UserID, input.Role)
+func (uc *TeamUseCase) AddMember(ctx context.Context, input AddMemberInput) (*MemberOutput, error) {
+	member, err := uc.svc.AddMember(ctx, input.TeamID, input.UserID, input.Role)
 	if err != nil {
 		return nil, err
 	}

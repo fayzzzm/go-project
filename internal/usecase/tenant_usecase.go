@@ -10,7 +10,9 @@ import (
 type TenantServicer interface {
 	List(ctx context.Context, limit, offset int) ([]domain.Tenant, error)
 }
-
+type ListTenantInput struct {
+	Pagination domain.Pagination
+}
 type TenantOutput struct {
 	ID        string    `json:"id"`
 	Name      string    `json:"name"`
@@ -26,9 +28,9 @@ func NewTenantUseCase(svc TenantServicer) *TenantUseCase {
 	return &TenantUseCase{svc: svc}
 }
 
-func (uc *TenantUseCase) List(ctx context.Context, p domain.Pagination) ([]TenantOutput, error) {
-	p.Normalize()
-	tenants, err := uc.svc.List(ctx, p.Limit, p.Offset)
+func (uc *TenantUseCase) List(ctx context.Context, input ListTenantInput) ([]TenantOutput, error) {
+	input.Pagination.Normalize()
+	tenants, err := uc.svc.List(ctx, input.Pagination.Limit, input.Pagination.Offset)
 	if err != nil {
 		return nil, err
 	}

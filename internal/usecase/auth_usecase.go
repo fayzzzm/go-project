@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/fayzzzm/go-project/internal/domain"
+	"github.com/fayzzzm/go-project/pkg/utils"
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -59,7 +60,7 @@ func (uc *AuthUseCase) Login(ctx context.Context, input LoginInput) (*LoginOutpu
 		"sub":       user.ID,
 		"email":     user.Email,
 		"role":      user.Role,
-		"tenant_id": user.TenantID,
+		"tenant_id": utils.StringValue(user.TenantID),
 		"exp":       time.Now().Add(time.Hour * 24).Unix(), // 24 hours
 	})
 

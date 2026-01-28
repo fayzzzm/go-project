@@ -24,10 +24,10 @@ type CreateDeviceInput struct {
 	DeviceProfileID *string `json:"device_profile_id"`
 	CabinetID       *string `json:"cabinet_id"`
 	TeamID          *string `json:"team_id"`
-	TenantID        string  `json:"tenant_id"` // Injected by middleware
 }
 
 type UpdateDeviceInput struct {
+	ID              string  `json:"-"`
 	Name            *string `json:"name"`
 	Description     *string `json:"description"`
 	SerialNumber    *string `json:"serial_number"`
@@ -35,6 +35,14 @@ type UpdateDeviceInput struct {
 	DeviceProfileID *string `json:"device_profile_id"`
 	CabinetID       *string `json:"cabinet_id"`
 	TeamID          *string `json:"team_id"`
+}
+
+type DeviceIDInput struct {
+	ID string `json:"-"`
+}
+
+type ListDeviceInput struct {
+	Pagination domain.Pagination
 }
 
 type DeviceOutput struct {
@@ -54,10 +62,7 @@ func NewDeviceUseCase(svc DeviceServicer) *DeviceUseCase {
 }
 
 func (uc *DeviceUseCase) Create(ctx context.Context, input CreateDeviceInput) (*DeviceOutput, error) {
-	userID := ""
-	if val := ctx.Value("user_id"); val != nil {
-		userID = val.(string)
-	}
+	userID := domain.UserFromContext(ctx)
 
 	device := &domain.Device{
 		Name:            input.Name,
@@ -67,7 +72,6 @@ func (uc *DeviceUseCase) Create(ctx context.Context, input CreateDeviceInput) (*
 		DeviceProfileID: input.DeviceProfileID,
 		CabinetID:       input.CabinetID,
 		TeamID:          input.TeamID,
-		TenantID:        utils.StringPtrOrNil(input.TenantID),
 		CreatedBy:       utils.StringPtrOrNil(userID),
 		UpdatedBy:       utils.StringPtrOrNil(userID),
 	}
@@ -79,8 +83,8 @@ func (uc *DeviceUseCase) Create(ctx context.Context, input CreateDeviceInput) (*
 	return toDeviceOutput(device), nil
 }
 
-func (uc *DeviceUseCase) GetByID(ctx context.Context, id string) (*DeviceOutput, error) {
-	device, err := uc.svc.GetByID(ctx, id)
+func (uc *DeviceUseCase) GetByID(ctx context.Context, input DeviceIDInput) (*DeviceOutput, error) {
+	device, err := uc.svc.GetByID(ctx, input.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -88,9 +92,9 @@ func (uc *DeviceUseCase) GetByID(ctx context.Context, id string) (*DeviceOutput,
 	return toDeviceOutput(device), nil
 }
 
-func (uc *DeviceUseCase) List(ctx context.Context, p domain.Pagination) ([]DeviceOutput, error) {
-	p.Normalize()
-	devices, err := uc.svc.List(ctx, p.Limit, p.Offset)
+func (uc *DeviceUseCase) List(ctx context.Context, input ListDeviceInput) ([]DeviceOutput, error) {
+	input.Pagination.Normalize()
+	devices, err := uc.svc.List(ctx, input.Pagination.Limit, input.Pagination.Offset)
 	if err != nil {
 		return nil, err
 	}
@@ -102,8 +106,8 @@ func (uc *DeviceUseCase) List(ctx context.Context, p domain.Pagination) ([]Devic
 	return output, nil
 }
 
-func (uc *DeviceUseCase) Update(ctx context.Context, id string, input UpdateDeviceInput) (*DeviceOutput, error) {
-	device, err := uc.svc.GetByID(ctx, id)
+func (uc *DeviceUseCase) Update(ctx context.Context, input UpdateDeviceInput) (*DeviceOutput, error) {
+	device, err := uc.svc.GetByID(ctx, input.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -130,8 +134,8 @@ func (uc *DeviceUseCase) Update(ctx context.Context, id string, input UpdateDevi
 		device.TeamID = input.TeamID
 	}
 
-	if val := ctx.Value("user_id"); val != nil {
-		device.UpdatedBy = utils.StringPtrOrNil(val.(string))
+	if userID := domain.UserFromContext(ctx); userID != "" {
+		device.UpdatedBy = utils.StringPtrOrNil(userID)
 	}
 
 	if err := uc.svc.Update(ctx, device); err != nil {
@@ -159,6 +163,6 @@ func toDeviceOutput(d *domain.Device) *DeviceOutput {
 	}
 }
 
-func (uc *DeviceUseCase) Delete(ctx context.Context, id string) error {
-	return uc.svc.Delete(ctx, id)
+func (uc *DeviceUseCase) Delete(ctx context.Context, input DeviceIDInput) error {
+	return uc.svc.Delete(ctx, input.ID)
 }

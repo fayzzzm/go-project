@@ -4,7 +4,6 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/fayzzzm/go-project/internal/domain"
 	"github.com/fayzzzm/go-project/internal/middleware"
 	"github.com/fayzzzm/go-project/internal/usecase"
 	"github.com/fayzzzm/go-project/pkg/utils"
@@ -12,7 +11,7 @@ import (
 )
 
 type TenantUseCase interface {
-	List(ctx context.Context, p domain.Pagination) ([]usecase.TenantOutput, error)
+	List(ctx context.Context, input usecase.ListTenantInput) ([]usecase.TenantOutput, error)
 }
 
 type TenantController struct {
@@ -36,9 +35,11 @@ func NewTenantController(r gin.IRouter, uc TenantUseCase, userUC UserUseCase) {
 }
 
 func (c *TenantController) List(ctx *gin.Context) ([]usecase.TenantOutput, error) {
-	return c.uc.List(ctx.Request.Context(), middleware.GetPagination(ctx))
+	return c.uc.List(ctx.Request.Context(), usecase.ListTenantInput{Pagination: middleware.GetPagination(ctx)})
 }
 
 func (c *TenantController) ListTenantUsers(ctx *gin.Context) ([]usecase.UserOutput, error) {
-	return c.userUC.List(ctx.Request.Context(), middleware.GetPagination(ctx), "", middleware.GetTenantID(ctx))
+	return c.userUC.List(ctx.Request.Context(), usecase.ListUserInput{
+		Pagination: middleware.GetPagination(ctx),
+	})
 }

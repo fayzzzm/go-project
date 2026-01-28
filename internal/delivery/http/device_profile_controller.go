@@ -4,7 +4,6 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/fayzzzm/go-project/internal/domain"
 	"github.com/fayzzzm/go-project/internal/middleware"
 	"github.com/fayzzzm/go-project/internal/usecase"
 	"github.com/fayzzzm/go-project/pkg/utils"
@@ -13,10 +12,10 @@ import (
 
 type DeviceProfileUseCase interface {
 	Create(ctx context.Context, input usecase.CreateDeviceProfileInput) (*usecase.DeviceProfileOutput, error)
-	GetByID(ctx context.Context, id string) (*usecase.DeviceProfileOutput, error)
-	List(ctx context.Context, p domain.Pagination) ([]usecase.DeviceProfileOutput, error)
-	Update(ctx context.Context, id string, input usecase.UpdateDeviceProfileInput) (*usecase.DeviceProfileOutput, error)
-	Delete(ctx context.Context, id string) error
+	GetByID(ctx context.Context, input usecase.DeviceProfileIDInput) (*usecase.DeviceProfileOutput, error)
+	List(ctx context.Context, input usecase.ListDeviceProfileInput) ([]usecase.DeviceProfileOutput, error)
+	Update(ctx context.Context, input usecase.UpdateDeviceProfileInput) (*usecase.DeviceProfileOutput, error)
+	Delete(ctx context.Context, input usecase.DeviceProfileIDInput) error
 }
 
 type DeviceProfileController struct {
@@ -42,17 +41,17 @@ func (c *DeviceProfileController) Create(ctx *gin.Context) (*usecase.DeviceProfi
 }
 
 func (c *DeviceProfileController) GetByID(ctx *gin.Context) (*usecase.DeviceProfileOutput, error) {
-	return c.uc.GetByID(ctx.Request.Context(), ctx.Param("id"))
+	return c.uc.GetByID(ctx.Request.Context(), usecase.DeviceProfileIDInput{ID: ctx.Param("id")})
 }
 
 func (c *DeviceProfileController) List(ctx *gin.Context) ([]usecase.DeviceProfileOutput, error) {
-	return c.uc.List(ctx.Request.Context(), middleware.GetPagination(ctx))
+	return c.uc.List(ctx.Request.Context(), usecase.ListDeviceProfileInput{Pagination: middleware.GetPagination(ctx)})
 }
 
 func (c *DeviceProfileController) Update(ctx *gin.Context) (*usecase.DeviceProfileOutput, error) {
-	return c.uc.Update(ctx.Request.Context(), ctx.Param("id"), middleware.GetBody[usecase.UpdateDeviceProfileInput](ctx))
+	return c.uc.Update(ctx.Request.Context(), middleware.GetBodyWithID[usecase.UpdateDeviceProfileInput](ctx, "id"))
 }
 
 func (c *DeviceProfileController) Delete(ctx *gin.Context) (struct{}, error) {
-	return struct{}{}, c.uc.Delete(ctx.Request.Context(), ctx.Param("id"))
+	return struct{}{}, c.uc.Delete(ctx.Request.Context(), usecase.DeviceProfileIDInput{ID: ctx.Param("id")})
 }

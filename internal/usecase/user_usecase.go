@@ -25,16 +25,25 @@ type CreateUserInput struct {
 	Password     string                 `json:"password" binding:"required,min=6"`
 	AppMetadata  map[string]interface{} `json:"app_metadata"`
 	UserMetadata map[string]interface{} `json:"user_metadata"`
-	TenantID     string                 `json:"tenant_id"`
 }
 
 type UpdateUserInput struct {
+	ID           string                 `json:"-"`
 	Email        *string                `json:"email"`
 	Name         *string                `json:"name"`
 	Address      *string                `json:"address"`
 	Phone        *string                `json:"phone"`
 	AppMetadata  map[string]interface{} `json:"app_metadata"`
 	UserMetadata map[string]interface{} `json:"user_metadata"`
+}
+
+type UserIDInput struct {
+	ID string `json:"-"`
+}
+
+type ListUserInput struct {
+	Pagination domain.Pagination
+	TeamID     string
 }
 
 type UserOutput struct {
@@ -64,10 +73,7 @@ func (uc *UserUseCase) Create(ctx context.Context, input CreateUserInput) (*User
 		return nil, err
 	}
 
-	userID := ""
-	if val := ctx.Value("user_id"); val != nil {
-		userID = val.(string)
-	}
+	userID := domain.UserFromContext(ctx)
 
 	user := &domain.User{
 		Email:        input.Email,
@@ -77,7 +83,6 @@ func (uc *UserUseCase) Create(ctx context.Context, input CreateUserInput) (*User
 		Password:     string(hashedBytes),
 		AppMetadata:  input.AppMetadata,
 		UserMetadata: input.UserMetadata,
-		TenantID:     utils.StringPtrOrNil(input.TenantID),
 		CreatedBy:    utils.StringPtrOrNil(userID),
 		UpdatedBy:    utils.StringPtrOrNil(userID),
 	}
@@ -86,7 +91,7 @@ func (uc *UserUseCase) Create(ctx context.Context, input CreateUserInput) (*User
 	if r, ok := input.UserMetadata["role"].(string); ok {
 		user.Role = r
 	} else {
-		user.Role = "user"
+		user.Role = domain.RoleUser
 	}
 
 	if err := uc.svc.Create(ctx, user); err != nil {
@@ -96,17 +101,18 @@ func (uc *UserUseCase) Create(ctx context.Context, input CreateUserInput) (*User
 	return toUserOutput(user), nil
 }
 
-func (uc *UserUseCase) GetByID(ctx context.Context, id string) (*UserOutput, error) {
-	user, err := uc.svc.GetByID(ctx, id)
+func (uc *UserUseCase) GetByID(ctx context.Context, input UserIDInput) (*UserOutput, error) {
+	user, err := uc.svc.GetByID(ctx, input.ID)
 	if err != nil {
 		return nil, err
 	}
 	return toUserOutput(user), nil
 }
 
-func (uc *UserUseCase) List(ctx context.Context, p domain.Pagination, teamID, tenantID string) ([]UserOutput, error) {
-	p.Normalize()
-	users, err := uc.svc.List(ctx, p.Limit, p.Offset, teamID, tenantID)
+func (uc *UserUseCase) List(ctx context.Context, input ListUserInput) ([]UserOutput, error) {
+	tenantID := domain.TenantFromContext(ctx)
+	input.Pagination.Normalize()
+	users, err := uc.svc.List(ctx, input.Pagination.Limit, input.Pagination.Offset, input.TeamID, tenantID)
 	if err != nil {
 		return nil, err
 	}
@@ -118,8 +124,8 @@ func (uc *UserUseCase) List(ctx context.Context, p domain.Pagination, teamID, te
 	return output, nil
 }
 
-func (uc *UserUseCase) Update(ctx context.Context, id string, input UpdateUserInput) (*UserOutput, error) {
-	user, err := uc.svc.GetByID(ctx, id)
+func (uc *UserUseCase) Update(ctx context.Context, input UpdateUserInput) (*UserOutput, error) {
+	user, err := uc.svc.GetByID(ctx, input.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -147,8 +153,8 @@ func (uc *UserUseCase) Update(ctx context.Context, id string, input UpdateUserIn
 		user.Phone = input.Phone
 	}
 
-	if val := ctx.Value("user_id"); val != nil {
-		user.UpdatedBy = utils.StringPtrOrNil(val.(string))
+	if userID := domain.UserFromContext(ctx); userID != "" {
+		user.UpdatedBy = utils.StringPtrOrNil(userID)
 	}
 
 	if err := uc.svc.Update(ctx, user); err != nil {
@@ -179,6 +185,6 @@ func toUserOutput(u *domain.User) *UserOutput {
 	}
 }
 
-func (uc *UserUseCase) Delete(ctx context.Context, id string) error {
-	return uc.svc.Delete(ctx, id)
+func (uc *UserUseCase) Delete(ctx context.Context, input UserIDInput) error {
+	return uc.svc.Delete(ctx, input.ID)
 }

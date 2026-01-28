@@ -19,12 +19,20 @@ type DeviceProfileServicer interface {
 type CreateDeviceProfileInput struct {
 	Name        string  `json:"name" binding:"required"`
 	Description *string `json:"description"`
-	TenantID    string  `json:"tenant_id"` // Injected by middleware
 }
 
 type UpdateDeviceProfileInput struct {
+	ID          string  `json:"-"`
 	Name        *string `json:"name"`
 	Description *string `json:"description"`
+}
+
+type DeviceProfileIDInput struct {
+	ID string `json:"-"`
+}
+
+type ListDeviceProfileInput struct {
+	Pagination domain.Pagination
 }
 
 type DeviceProfileOutput struct {
@@ -45,15 +53,11 @@ func NewDeviceProfileUseCase(svc DeviceProfileServicer) *DeviceProfileUseCase {
 }
 
 func (uc *DeviceProfileUseCase) Create(ctx context.Context, input CreateDeviceProfileInput) (*DeviceProfileOutput, error) {
-	userID := ""
-	if val := ctx.Value("user_id"); val != nil {
-		userID = val.(string)
-	}
+	userID := domain.UserFromContext(ctx)
 
 	dp := &domain.DeviceProfile{
 		Name:        input.Name,
 		Description: input.Description,
-		TenantID:    utils.StringPtrOrNil(input.TenantID),
 		CreatedBy:   utils.StringPtrOrNil(userID),
 		UpdatedBy:   utils.StringPtrOrNil(userID),
 	}
@@ -65,17 +69,17 @@ func (uc *DeviceProfileUseCase) Create(ctx context.Context, input CreateDevicePr
 	return toDeviceProfileOutput(dp), nil
 }
 
-func (uc *DeviceProfileUseCase) GetByID(ctx context.Context, id string) (*DeviceProfileOutput, error) {
-	dp, err := uc.svc.GetByID(ctx, id)
+func (uc *DeviceProfileUseCase) GetByID(ctx context.Context, input DeviceProfileIDInput) (*DeviceProfileOutput, error) {
+	dp, err := uc.svc.GetByID(ctx, input.ID)
 	if err != nil {
 		return nil, err
 	}
 	return toDeviceProfileOutput(dp), nil
 }
 
-func (uc *DeviceProfileUseCase) List(ctx context.Context, p domain.Pagination) ([]DeviceProfileOutput, error) {
-	p.Normalize()
-	dps, err := uc.svc.List(ctx, p.Limit, p.Offset)
+func (uc *DeviceProfileUseCase) List(ctx context.Context, input ListDeviceProfileInput) ([]DeviceProfileOutput, error) {
+	input.Pagination.Normalize()
+	dps, err := uc.svc.List(ctx, input.Pagination.Limit, input.Pagination.Offset)
 	if err != nil {
 		return nil, err
 	}
@@ -87,8 +91,8 @@ func (uc *DeviceProfileUseCase) List(ctx context.Context, p domain.Pagination) (
 	return output, nil
 }
 
-func (uc *DeviceProfileUseCase) Update(ctx context.Context, id string, input UpdateDeviceProfileInput) (*DeviceProfileOutput, error) {
-	dp, err := uc.svc.GetByID(ctx, id)
+func (uc *DeviceProfileUseCase) Update(ctx context.Context, input UpdateDeviceProfileInput) (*DeviceProfileOutput, error) {
+	dp, err := uc.svc.GetByID(ctx, input.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -100,8 +104,8 @@ func (uc *DeviceProfileUseCase) Update(ctx context.Context, id string, input Upd
 		dp.Description = input.Description
 	}
 
-	if val := ctx.Value("user_id"); val != nil {
-		dp.UpdatedBy = utils.StringPtrOrNil(val.(string))
+	if userID := domain.UserFromContext(ctx); userID != "" {
+		dp.UpdatedBy = utils.StringPtrOrNil(userID)
 	}
 
 	if err := uc.svc.Update(ctx, dp); err != nil {
@@ -110,8 +114,8 @@ func (uc *DeviceProfileUseCase) Update(ctx context.Context, id string, input Upd
 	return toDeviceProfileOutput(dp), nil
 }
 
-func (uc *DeviceProfileUseCase) Delete(ctx context.Context, id string) error {
-	return uc.svc.Delete(ctx, id)
+func (uc *DeviceProfileUseCase) Delete(ctx context.Context, input DeviceProfileIDInput) error {
+	return uc.svc.Delete(ctx, input.ID)
 }
 
 func toDeviceProfileOutput(dp *domain.DeviceProfile) *DeviceProfileOutput {

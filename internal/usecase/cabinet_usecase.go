@@ -19,14 +19,21 @@ type CreateCabinetInput struct {
 	Name     string `json:"name" binding:"required"`
 	Location string `json:"location"`
 	TeamID   string `json:"team_id" binding:"required,uuid"`
-	TenantID string `json:"tenant_id" binding:"required"`
 }
 
 type UpdateCabinetInput struct {
+	ID       string  `json:"-"`
 	Name     *string `json:"name"`
 	Location *string `json:"location"`
 	TeamID   *string `json:"team_id" binding:"omitempty,uuid"`
-	TenantID string  `json:"tenant_id" binding:"required"`
+}
+
+type CabinetIDInput struct {
+	ID string `json:"-"`
+}
+
+type ListCabinetInput struct {
+	Pagination domain.Pagination
 }
 
 type CabinetOutput struct {
@@ -46,12 +53,13 @@ func NewCabinetUseCase(svc CabinetServicer) *CabinetUseCase {
 	}
 }
 
-func (uc *CabinetUseCase) Create(ctx context.Context, input CreateCabinetInput, userID string) (*CabinetOutput, error) {
+func (uc *CabinetUseCase) Create(ctx context.Context, input CreateCabinetInput) (*CabinetOutput, error) {
+	userID := domain.UserFromContext(ctx)
+
 	cabinet := &domain.Cabinet{
 		Name:      input.Name,
 		Location:  utils.StringPtrOrNil(input.Location),
 		TeamID:    utils.StringPtrOrNil(input.TeamID),
-		TenantID:  utils.StringPtrOrNil(input.TenantID),
 		CreatedBy: utils.StringPtrOrNil(userID),
 		UpdatedBy: utils.StringPtrOrNil(userID),
 	}
@@ -63,17 +71,17 @@ func (uc *CabinetUseCase) Create(ctx context.Context, input CreateCabinetInput, 
 	return toCabinetOutput(cabinet), nil
 }
 
-func (uc *CabinetUseCase) GetByID(ctx context.Context, id string) (*CabinetOutput, error) {
-	cabinet, err := uc.svc.GetByID(ctx, id)
+func (uc *CabinetUseCase) GetByID(ctx context.Context, input CabinetIDInput) (*CabinetOutput, error) {
+	cabinet, err := uc.svc.GetByID(ctx, input.ID)
 	if err != nil {
 		return nil, err
 	}
 	return toCabinetOutput(cabinet), nil
 }
 
-func (uc *CabinetUseCase) List(ctx context.Context, p domain.Pagination) ([]CabinetOutput, error) {
-	p.Normalize()
-	cabinets, err := uc.svc.List(ctx, p.Limit, p.Offset)
+func (uc *CabinetUseCase) List(ctx context.Context, input ListCabinetInput) ([]CabinetOutput, error) {
+	input.Pagination.Normalize()
+	cabinets, err := uc.svc.List(ctx, input.Pagination.Limit, input.Pagination.Offset)
 	if err != nil {
 		return nil, err
 	}
@@ -85,8 +93,9 @@ func (uc *CabinetUseCase) List(ctx context.Context, p domain.Pagination) ([]Cabi
 	return output, nil
 }
 
-func (uc *CabinetUseCase) Update(ctx context.Context, id string, input UpdateCabinetInput) (*CabinetOutput, error) {
-	cabinet, err := uc.svc.GetByID(ctx, id)
+func (uc *CabinetUseCase) Update(ctx context.Context, input UpdateCabinetInput) (*CabinetOutput, error) {
+	cabinet, err := uc.svc.GetByID(ctx, input.ID)
+
 	if err != nil {
 		return nil, err
 	}
@@ -101,12 +110,9 @@ func (uc *CabinetUseCase) Update(ctx context.Context, id string, input UpdateCab
 	if input.TeamID != nil {
 		cabinet.TeamID = input.TeamID
 	}
-	if input.TenantID != "" {
-		cabinet.TenantID = &input.TenantID
-	}
 
-	if val := ctx.Value("user_id"); val != nil {
-		cabinet.UpdatedBy = utils.StringPtrOrNil(val.(string))
+	if userID := domain.UserFromContext(ctx); userID != "" {
+		cabinet.UpdatedBy = utils.StringPtrOrNil(userID)
 	}
 
 	if err := uc.svc.Update(ctx, cabinet); err != nil {
@@ -115,8 +121,8 @@ func (uc *CabinetUseCase) Update(ctx context.Context, id string, input UpdateCab
 	return toCabinetOutput(cabinet), nil
 }
 
-func (uc *CabinetUseCase) Delete(ctx context.Context, id string) error {
-	return uc.svc.Delete(ctx, id)
+func (uc *CabinetUseCase) Delete(ctx context.Context, input CabinetIDInput) error {
+	return uc.svc.Delete(ctx, input.ID)
 }
 
 func toCabinetOutput(c *domain.Cabinet) *CabinetOutput {
