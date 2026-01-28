@@ -1,0 +1,211 @@
+@baseUrl = http://localhost:8080/api/v1
+@tenantId = {{paste_tenant_id}}
+@createdUserId = {{paste_user_id}}
+@createdDeviceId = {{paste_device_id}}
+@createdCabinetId = {{paste_cabinet_id}}
+@createdTeamId = {{paste_team_id}}
+@createdProfileId = {{paste_profile_id}}
+
+@password = password123
+@authToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFkbWluQGl0c3dhcmUuY29tIiwiZXhwIjoxNzY5NzI3NDMxLCJyb2xlIjoiYWRtaW4iLCJzdWIiOiJhYWFhMTExMS1hYWFhLWFhYWEtYWFhYS1hYWFhYWFhYWFhYWEiLCJ0ZW5hbnRfaWQiOiJhMGVlYmM5OS05YzBiLTRlZjgtYmI2ZC02YmI5YmQzODBhMTEifQ.V-OLQ79FERNpETF_1hCuLL4NZ2ehHPwn_hhar7tnG9M
+### ============================================================================
+### TENANTS
+### ============================================================================
+
+### 1a. List Tenants
+# @name listTenants
+GET {{baseUrl}}/tenants
+Content-Type: application/json
+
+### 1b. List Tenant Users
+# @name listTenantUsers
+GET {{baseUrl}}/tenants/users
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+### ============================================================================
+### AUTHENTICATION
+### ============================================================================
+
+### 1c. Login
+# @name login
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+    "email": "admin@itsware.com",
+    "password": "{{password}}"
+}
+
+
+### ============================================================================
+### USERS
+### ============================================================================
+
+### 2. Create User
+# @name createUser
+POST {{baseUrl}}/users
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+    "email": "developer1@itsware.com",
+    "password": "{{password}}",
+    "name": "10x Developer",
+    "address": "Silicon Valley",
+    "phone": "+1-555-0199",
+    "app_metadata": {
+        "theme": "dark"
+    },
+    "user_metadata": {
+        "role": "admin",
+        "permissions": ["all"]
+    }
+}
+
+### 3. Get User By ID
+GET {{baseUrl}}/users/{{createdUserId}}
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+### 4. Update User
+PUT {{baseUrl}}/users/{{createdUserId}}
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+    "name": "Lalante Developer"
+}
+
+### 6. Delete User 
+DELETE {{baseUrl}}/users/{{createdUserId}}
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+
+### ============================================================================
+### TEAMS
+### ============================================================================
+
+### 7. Create Team
+# @name createTeam
+POST {{baseUrl}}/teams
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+    "name": "Lalante Ops Team",
+    "status": "active"
+}
+
+### 8. List Teams
+GET {{baseUrl}}/teams
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+### 9. Add Member to Team
+# @name addMember
+POST {{baseUrl}}/teams/{{createdTeamId}}/members
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+    "user_id": "{{createdUserId}}",
+    "role": "admin"
+}
+
+### 10. List Teams for User
+GET {{baseUrl}}/teams?user_id={{createdUserId}}
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+
+### ============================================================================
+### CABINETS
+### ============================================================================
+
+### 11. Create Cabinet
+# @name createCabinet
+POST {{baseUrl}}/cabinets
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+    "name": "Main Server Rack",
+    "location": "Building A, Floor 2",
+    "team_id": "{{createdTeamId}}"
+}
+
+### 12. List Cabinets
+GET {{baseUrl}}/cabinets
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+
+### ============================================================================
+### DEVICE PROFILES
+### ============================================================================
+
+### 13. Create Device Profile
+# @name createProfile
+POST {{baseUrl}}/device_profiles
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+    "name": "Handheld RFID Reader",
+    "description": "Zebra MC3300 Models"
+}
+
+### 14. List Device Profiles
+GET {{baseUrl}}/device_profiles
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+
+### ============================================================================
+### DEVICES
+### ============================================================================
+
+### 15. Create Device
+# @name createDevice
+POST {{baseUrl}}/devices
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+    "name": "RFID Reader X12",
+    "description": "Main entrance reader",
+    "serial_number": "SN-2026-005",
+    "epc": "EPC:3039",
+    "device_profile_id": "{{createdProfileId}}",
+    "cabinet_id": "{{createdCabinetId}}",
+    "team_id": "{{createdTeamId}}",
+}
+
+### 16. List Devices
+GET {{baseUrl}}/devices
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+
+### 17. Get Device By ID
+GET {{baseUrl}}/devices/{{createdDeviceId}}
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+### 18. Update Device
+PUT {{baseUrl}}/devices/{{createdDeviceId}}
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+    "name": "RFID Reader X1 (Updated)",
+    "description": "Updated description",
+    "serial_number": "SN-2026-004-UPD"
+}
+
+### 19. Delete Device
+DELETE {{baseUrl}}/devices/{{createdDeviceId}}
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
