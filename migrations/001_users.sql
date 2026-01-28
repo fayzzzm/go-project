@@ -9,7 +9,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 CREATE TABLE IF NOT EXISTS users.user (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    email TEXT UNIQUE NOT NULL,
+    email CITEXT UNIQUE NOT NULL,
     name TEXT,
     address TEXT,
     role TEXT DEFAULT 'user',
@@ -65,7 +65,7 @@ BEGIN
         email, name, address, phone, role, app_metadata, user_metadata, password, tenant_id
     )
     VALUES (
-        LOWER(TRIM(r.email)), TRIM(r.name), TRIM(r.address), 
+        TRIM(r.email), TRIM(r.name), TRIM(r.address), 
         r.phone, COALESCE(r.role, 'user'), 
         COALESCE(r.app_metadata, '{}'::jsonb), 
         COALESCE(r.user_metadata, '{}'::jsonb),
@@ -138,7 +138,7 @@ BEGIN
     RETURN QUERY
     SELECT id, email, name, address, phone, role, app_metadata, user_metadata, ''::text as password, created_at, updated_at, tenant_id
     FROM users.user
-    WHERE email = LOWER(TRIM(r.email));
+    WHERE email = TRIM(r.email);
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER STABLE;
 
@@ -157,7 +157,7 @@ BEGIN
            u.password,
            u.created_at, u.updated_at, u.tenant_id
     FROM users.user u
-    WHERE u.email = LOWER(TRIM(p_email));
+    WHERE u.email = TRIM(p_email);
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER STABLE;
 
