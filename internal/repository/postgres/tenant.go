@@ -16,9 +16,16 @@ func NewTenantRepo(pool *pgxpool.Pool) *TenantRepo {
 }
 
 const (
-	queryTenantList = "SELECT id, name, created_at, updated_at FROM tenants.tenant ORDER BY created_at DESC LIMIT $1 OFFSET $2"
+	queryTenantList = "SELECT * FROM tenants.list($1)"
 )
 
+type listTenantsRequest struct {
+	ID        *string `json:"id"`
+	Name      *string `json:"name"`
+	LimitVal  int     `json:"limit_val"`
+	OffsetVal int     `json:"offset_val"`
+}
+
 func (r *TenantRepo) List(ctx context.Context, limit, offset int) ([]domain.Tenant, error) {
-	return ExecQueryList[domain.Tenant](ctx, r.pool, queryTenantList, limit, offset)
+	return ExecQueryList[domain.Tenant](ctx, r.pool, queryTenantList, listTenantsRequest{LimitVal: limit, OffsetVal: offset})
 }

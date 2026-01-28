@@ -35,12 +35,7 @@ func (uc *TenantUseCase) List(ctx context.Context, p domain.Pagination) ([]Tenan
 
 	output := make([]TenantOutput, len(tenants))
 	for i, t := range tenants {
-		output[i] = TenantOutput{
-			ID:        t.ID,
-			Name:      t.Name,
-			CreatedAt: t.CreatedAt,
-			UpdatedAt: t.UpdatedAt,
-		}
+		output[i] = TenantOutput{ID: t.ID, Name: t.Name, CreatedAt: t.CreatedAt, UpdatedAt: t.UpdatedAt}
 	}
 	return output, nil
 }
