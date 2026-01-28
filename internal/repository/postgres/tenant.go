@@ -19,13 +19,6 @@ const (
 	queryTenantList = "SELECT * FROM tenants.list($1)"
 )
 
-type listTenantsRequest struct {
-	ID        *string `json:"id"`
-	Name      *string `json:"name"`
-	LimitVal  int     `json:"limit_val"`
-	OffsetVal int     `json:"offset_val"`
-}
-
 func (r *TenantRepo) List(ctx context.Context, limit, offset int) ([]domain.Tenant, error) {
-	return ExecQueryList[domain.Tenant](ctx, r.pool, queryTenantList, listTenantsRequest{LimitVal: limit, OffsetVal: offset})
+	return ExecQueryList[domain.Tenant](ctx, r.pool, queryTenantList, TenantRequest{LimitVal: &limit, OffsetVal: &offset})
 }

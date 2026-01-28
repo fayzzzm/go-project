@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"net/http"
 	"reflect"
 
 	"github.com/gin-gonic/gin"
@@ -15,7 +14,8 @@ func BindJSON[T any]() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var input T
 		if err := c.ShouldBindJSON(&input); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request payload: " + err.Error()})
+			// Pass raw error to global error handler to format validation messages
+			_ = c.Error(err).SetType(gin.ErrorTypeBind)
 			c.Abort()
 			return
 		}

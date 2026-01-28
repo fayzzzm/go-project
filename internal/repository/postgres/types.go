@@ -76,6 +76,7 @@ type MemberRequest struct {
 
 type TenantRequest struct {
 	ID        *string `db:"id"`
+	Name      *string `db:"name"`
 	LimitVal  *int    `db:"limit_val"`
 	OffsetVal *int    `db:"offset_val"`
 }

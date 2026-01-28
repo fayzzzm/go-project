@@ -19,12 +19,14 @@ type CreateCabinetInput struct {
 	Name     string `json:"name" binding:"required"`
 	Location string `json:"location"`
 	TeamID   string `json:"team_id" binding:"required,uuid"`
+	TenantID string `json:"tenant_id"`
 }
 
 type UpdateCabinetInput struct {
 	Name     string `json:"name"`
 	Location string `json:"location"`
 	TeamID   string `json:"team_id" binding:"omitempty,uuid"`
+	TenantID string `json:"tenant_id"`
 }
 
 type CabinetOutput struct {
@@ -49,6 +51,7 @@ func (uc *CabinetUseCase) Create(ctx context.Context, input CreateCabinetInput, 
 		Name:     input.Name,
 		Location: utils.StringPtrOrNil(input.Location),
 		TeamID:   utils.StringPtrOrNil(input.TeamID),
+		TenantID: utils.StringPtrOrNil(input.TenantID),
 	}
 
 	if err := uc.svc.Create(ctx, cabinet, userID); err != nil {
@@ -86,6 +89,7 @@ func (uc *CabinetUseCase) Update(ctx context.Context, id string, input UpdateCab
 		Name:     input.Name,
 		Location: utils.StringPtrOrNil(input.Location),
 		TeamID:   utils.StringPtrOrNil(input.TeamID),
+		TenantID: utils.StringPtrOrNil(input.TenantID),
 	}
 
 	if err := uc.svc.Update(ctx, cabinet); err != nil {

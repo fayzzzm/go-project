@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS users.user (
 -- TYPE: Request/Response DTOs
 CREATE TYPE users.user_request AS (
     id            UUID,
-    email         TEXT,
+    email         CITEXT,
     name          TEXT,
     address       TEXT,
     phone         TEXT,
@@ -41,7 +41,7 @@ CREATE TYPE users.user_request AS (
 
 CREATE TYPE users.user_response AS (
     id            UUID,
-    email         TEXT,
+    email         CITEXT,
     name          TEXT,
     address       TEXT,
     phone         TEXT,
@@ -145,7 +145,7 @@ $$ LANGUAGE plpgsql SECURITY DEFINER STABLE;
 -- Get For Login
 CREATE OR REPLACE FUNCTION users.get_for_login(p_email TEXT)
 RETURNS TABLE (
-    id UUID, email TEXT, name TEXT, address TEXT, phone TEXT,
+    id UUID, email CITEXT, name TEXT, address TEXT, phone TEXT,
     role TEXT, app_metadata JSONB, user_metadata JSONB,
     password TEXT, created_at TIMESTAMPTZ, updated_at TIMESTAMPTZ,
     tenant_id UUID

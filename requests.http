@@ -1,13 +1,13 @@
 @baseUrl = http://localhost:8080/api/v1
-@tenantId = {{paste_tenant_id}}
-@createdUserId = {{paste_user_id}}
+@tenantId = a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11
+@createdUserId = 480761ea-bcdd-4e33-8eb3-0d10ce64de4d
 @createdDeviceId = {{paste_device_id}}
 @createdCabinetId = {{paste_cabinet_id}}
-@createdTeamId = {{paste_team_id}}
+@createdTeamId = 34c5a214-9e6b-4bb1-9f91-3328b222805c
 @createdProfileId = {{paste_profile_id}}
 
 @password = secret_Pass123!
-@authToken = {{paste_auth_token}}
+@authToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImRldmVsb3BlcjFAaXRzd2FyZS5jb20iLCJleHAiOjE3Njk2OTA2MTIsInJvbGUiOiJ1c2VyIiwic3ViIjoiNDgwNzYxZWEtYmNkZC00ZTMzLThlYjMtMGQxMGNlNjRkZTRkIiwidGVuYW50X2lkIjoiYTBlZWJjOTktOWMwYi00ZWY4LWJiNmQtNmJiOWJkMzgwYTExIn0.8GmwqQkl4noKLHOthAQkQI-oKpw4PD_j813ujWm5awA
 
 ### ============================================================================
 ### TENANTS
@@ -99,7 +99,7 @@ Authorization: Bearer {{authToken}}
 X-Tenant-ID: {{tenantId}}
 
 {
-    "name": "Warehouse Ops Team",
+    "name": "Lalante Ops Team",
     "status": "active"
 }
 

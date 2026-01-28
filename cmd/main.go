@@ -13,6 +13,7 @@ import (
 	"github.com/fayzzzm/go-project/internal/usecase"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
 	"go.uber.org/fx"
@@ -136,29 +137,61 @@ func NewDatabasePool(lc fx.Lifecycle) (*pgxpool.Pool, error) {
 	}
 
 	config.AfterConnect = func(ctx context.Context, conn *pgx.Conn) error {
-		types := []string{
-			"devices.device_request",
-			"users.user_request",
-			"cabinets.cabinet_request",
-			"teams.team_request",
-			"device_profiles.device_profile_request",
-			"teams.member_request",
+		// 1. Robustly register citext and its array type
+		var citextOID, citextArrayOID *uint32
+		err := conn.QueryRow(ctx, `
+			SELECT to_regtype('public.citext')::oid, 
+			       to_regtype('public.citext[]')::oid
+		`).Scan(&citextOID, &citextArrayOID)
+		if err != nil {
+			log.Printf("Warning: Failed to query citext OIDs: %v", err)
+			return nil // Continue and let LoadType handle missing types if needed
 		}
-		for _, t := range types {
+
+		if citextOID != nil {
+			citextType := &pgtype.Type{Name: "citext", OID: *citextOID, Codec: pgtype.TextCodec{}}
+			conn.TypeMap().RegisterType(citextType)
+
+			if citextArrayOID != nil {
+				conn.TypeMap().RegisterType(&pgtype.Type{
+					Name: "_citext",
+					OID:  *citextArrayOID,
+					Codec: &pgtype.ArrayCodec{
+						ElementType: citextType,
+					},
+				})
+			}
+		} else {
+			log.Printf("Warning: citext extension not found in 'public' schema")
+		}
+
+		// 2. Register composite types
+		compositeTypes := []string{
+			"tenants.tenant_request",
+			"users.user_request",
+			"teams.team_request",
+			"teams.member_request",
+			"cabinets.cabinet_request",
+			"device_profiles.device_profile_request",
+			"devices.device_request",
+		}
+		for _, t := range compositeTypes {
 			dt, err := conn.LoadType(ctx, t)
 			if err != nil {
-				log.Printf("Warning: Failed to load type %s: %v", t, err)
+				log.Printf("Warning: Failed to load composite type %s: %v", t, err)
 				continue
 			}
 			conn.TypeMap().RegisterType(dt)
 		}
 
+		// 3. Map Go structs to those PostgreSQL types
 		conn.TypeMap().RegisterDefaultPgType(postgres.DeviceRequest{}, "devices.device_request")
 		conn.TypeMap().RegisterDefaultPgType(postgres.UserRequest{}, "users.user_request")
 		conn.TypeMap().RegisterDefaultPgType(postgres.CabinetRequest{}, "cabinets.cabinet_request")
 		conn.TypeMap().RegisterDefaultPgType(postgres.TeamRequest{}, "teams.team_request")
 		conn.TypeMap().RegisterDefaultPgType(postgres.DeviceProfileRequest{}, "device_profiles.device_profile_request")
 		conn.TypeMap().RegisterDefaultPgType(postgres.MemberRequest{}, "teams.member_request")
+		conn.TypeMap().RegisterDefaultPgType(postgres.TenantRequest{}, "tenants.tenant_request")
 
 		return nil
 	}
