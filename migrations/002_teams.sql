@@ -80,7 +80,7 @@ BEGIN
     RETURN QUERY
     SELECT id, name, status, tenant_id, created_at, updated_at, created_by, updated_by
     FROM teams.team
-    WHERE id = r.id;
+    WHERE id = r.id AND (r.tenant_id IS NULL OR tenant_id = r.tenant_id);
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER STABLE;
 
@@ -115,7 +115,7 @@ BEGIN
         name = COALESCE(r.name, name),
         status = COALESCE(r.status, status),
         updated_at = NOW()
-    WHERE id = r.id
+    WHERE id = r.id AND (r.tenant_id IS NULL OR tenant_id = r.tenant_id)
     RETURNING id, name, status, tenant_id, created_at, updated_at, created_by, updated_by;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -124,7 +124,7 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 CREATE OR REPLACE FUNCTION teams.delete(r teams.team_request)
 RETURNS VOID AS $$
 BEGIN
-    DELETE FROM teams.team WHERE id = r.id;
+    DELETE FROM teams.team WHERE id = r.id AND (r.tenant_id IS NULL OR tenant_id = r.tenant_id);
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 

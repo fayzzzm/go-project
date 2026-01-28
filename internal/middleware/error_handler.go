@@ -56,6 +56,12 @@ func ErrorHandlerMiddleware() gin.HandlerFunc {
 				case errors.Is(err, domain.ErrUnauthorized):
 					statusCode = http.StatusUnauthorized
 					message = err.Error()
+				case errors.Is(err, domain.ErrForbidden):
+					statusCode = http.StatusForbidden
+					message = err.Error()
+				case errors.Is(err, domain.ErrInvalidCredentials):
+					statusCode = http.StatusUnauthorized
+					message = err.Error()
 				default:
 					// Handle Postgres custom errors
 					var pgErr *pgconn.PgError

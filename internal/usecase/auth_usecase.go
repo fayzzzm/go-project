@@ -2,7 +2,6 @@ package usecase
 
 import (
 	"context"
-	"errors"
 	"os"
 	"time"
 
@@ -47,12 +46,12 @@ func NewAuthUseCase(svc UserServicer) *AuthUseCase {
 func (uc *AuthUseCase) Login(ctx context.Context, input LoginInput) (*LoginOutput, error) {
 	user, err := uc.svc.GetForLogin(ctx, input.Email)
 	if err != nil {
-		return nil, errors.New("invalid credentials")
+		return nil, domain.ErrInvalidCredentials
 	}
 
 	// Compare Password
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(input.Password)); err != nil {
-		return nil, errors.New("invalid credentials")
+		return nil, domain.ErrInvalidCredentials
 	}
 
 	// Generate JWT

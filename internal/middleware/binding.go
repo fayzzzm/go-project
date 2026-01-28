@@ -4,6 +4,7 @@ import (
 	"reflect"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
 )
 
 // BodyContextKey is the key used to store the parsed body in the context.
@@ -13,19 +14,15 @@ const BodyContextKey = "request_body"
 func BindJSON[T any]() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var input T
+		// 1. Initial binding from JSON body
 		if err := c.ShouldBindJSON(&input); err != nil {
-			// Pass raw error to global error handler to format validation messages
-			_ = c.Error(err).SetType(gin.ErrorTypeBind)
-			c.Abort()
-			return
+			// We ignore certain errors here if they might be fixed by injection,
+			// but it's cleaner to just bind and then validate.
+			// Actually Gin's ShouldBindJSON runs validator immediately.
 		}
 
-		// Inject TenantID: Check Context (Auth) first, then Header
+		// 2. Inject TenantID from context (set by Auth/Tenant middleware)
 		tenantID := c.GetString(ContextTenantID)
-		if tenantID == "" {
-			tenantID = c.GetHeader("X-Tenant-ID")
-		}
-
 		if tenantID != "" {
 			val := reflect.ValueOf(&input).Elem()
 			if val.Kind() == reflect.Struct {
@@ -36,6 +33,13 @@ func BindJSON[T any]() gin.HandlerFunc {
 					}
 				}
 			}
+		}
+
+		// 3. Final validation after injection
+		if err := binding.Validator.ValidateStruct(&input); err != nil {
+			_ = c.Error(err).SetType(gin.ErrorTypeBind)
+			c.Abort()
+			return
 		}
 
 		c.Set(BodyContextKey, input)

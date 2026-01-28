@@ -20,5 +20,7 @@ const (
 )
 
 func (r *TenantRepo) List(ctx context.Context, limit, offset int) ([]domain.Tenant, error) {
-	return ExecQueryList[domain.Tenant](ctx, r.pool, queryTenantList, TenantRequest{LimitVal: &limit, OffsetVal: &offset})
+	return ExecQueryList[domain.Tenant](ctx, r.pool, queryTenantList, &TenantRequest{
+		LimitVal: &limit, OffsetVal: &offset,
+	})
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"reflect"
 
 	"github.com/fayzzzm/go-project/internal/domain"
 	"github.com/jackc/pgx/v5"
@@ -16,6 +17,7 @@ import (
 // ExecQueryOne executes a query and returns a single row parsed into struct T.
 // It handles the query execution, checking for errors, and collecting the row.
 func ExecQueryOne[T any](ctx context.Context, pool *pgxpool.Pool, query string, args ...any) (*T, error) {
+	injectTenant(ctx, args...)
 	rows, err := pool.Query(ctx, query, args...)
 	if err != nil {
 		return nil, MapPgError(err)
@@ -41,6 +43,7 @@ func ExecQueryUpdate[T any](ctx context.Context, pool *pgxpool.Pool, dest *T, qu
 
 // Exec executes a query without returning any rows and maps the error.
 func Exec(ctx context.Context, pool *pgxpool.Pool, query string, args ...any) error {
+	injectTenant(ctx, args...)
 	_, err := pool.Exec(ctx, query, args...)
 	return MapPgError(err)
 }
@@ -48,6 +51,7 @@ func Exec(ctx context.Context, pool *pgxpool.Pool, query string, args ...any) er
 // ExecQueryList executes a query and returns a slice of rows parsed into struct T.
 // It handles the query execution, checking for errors, and collecting the rows.
 func ExecQueryList[T any](ctx context.Context, pool *pgxpool.Pool, query string, args ...any) ([]T, error) {
+	injectTenant(ctx, args...)
 	rows, err := pool.Query(ctx, query, args...)
 	if err != nil {
 		return nil, MapPgError(err)
@@ -79,4 +83,30 @@ func MapPgError(err error) error {
 		}
 	}
 	return err
+}
+
+func injectTenant(ctx context.Context, args ...any) {
+	if len(args) == 0 {
+		return
+	}
+	tid := domain.TenantFromContext(ctx)
+	if tid == "" {
+		return
+	}
+
+	arg := args[0]
+	v := reflect.ValueOf(arg)
+	if v.Kind() == reflect.Ptr {
+		v = v.Elem()
+	}
+
+	if v.Kind() == reflect.Struct {
+		f := v.FieldByName("TenantID")
+		if f.IsValid() && f.CanSet() {
+			// Only set if not already set
+			if f.Kind() == reflect.Ptr && f.IsNil() {
+				f.Set(reflect.ValueOf(&tid))
+			}
+		}
+	}
 }

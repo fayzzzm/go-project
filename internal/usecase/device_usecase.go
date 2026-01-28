@@ -24,7 +24,7 @@ type CreateDeviceInput struct {
 	DeviceProfileID string `json:"device_profile_id"`
 	CabinetID       string `json:"cabinet_id"`
 	TeamID          string `json:"team_id"`
-	TenantID        string `json:"tenant_id"`
+	TenantID        string `json:"tenant_id" binding:"required"`
 }
 
 type DeviceOutput struct {
@@ -86,28 +86,17 @@ func (uc *DeviceUseCase) List(ctx context.Context, p domain.Pagination) ([]Devic
 }
 
 func (uc *DeviceUseCase) Update(ctx context.Context, id string, input CreateDeviceInput) (*DeviceOutput, error) {
-	device, err := uc.svc.GetByID(ctx, id)
-	if err != nil {
-		return nil, err
+	device := &domain.Device{
+		ID:              id,
+		Name:            input.Name,
+		Description:     utils.StringPtrOrNil(input.Description),
+		SerialNumber:    input.SerialNumber,
+		EPC:             utils.StringPtrOrNil(input.EPC),
+		DeviceProfileID: utils.StringPtrOrNil(input.DeviceProfileID),
+		CabinetID:       utils.StringPtrOrNil(input.CabinetID),
+		TeamID:          utils.StringPtrOrNil(input.TeamID),
+		TenantID:        utils.StringPtrOrNil(input.TenantID),
 	}
-
-	// Security Check: Ensure Device belongs to the requested Tenant
-	if input.TenantID != "" {
-		if device.TenantID != nil && *device.TenantID != input.TenantID {
-			return nil, domain.ErrUnauthorized
-		}
-	}
-
-	device.Name = input.Name
-	device.Description = utils.StringPtrOrNil(input.Description)
-	device.EPC = utils.StringPtrOrNil(input.EPC)
-	if input.SerialNumber != "" {
-		device.SerialNumber = input.SerialNumber
-	}
-
-	device.DeviceProfileID = utils.StringPtrOrNil(input.DeviceProfileID)
-	device.CabinetID = utils.StringPtrOrNil(input.CabinetID)
-	device.TeamID = utils.StringPtrOrNil(input.TeamID)
 
 	if err := uc.svc.Update(ctx, device); err != nil {
 		return nil, err
@@ -134,16 +123,6 @@ func toDeviceOutput(d *domain.Device) *DeviceOutput {
 	}
 }
 
-func (uc *DeviceUseCase) Delete(ctx context.Context, id, tenantID string) error {
-	// Security Check
-	if tenantID != "" {
-		device, err := uc.svc.GetByID(ctx, id)
-		if err != nil {
-			return err
-		}
-		if device.TenantID != nil && *device.TenantID != tenantID {
-			return domain.ErrUnauthorized
-		}
-	}
+func (uc *DeviceUseCase) Delete(ctx context.Context, id string) error {
 	return uc.svc.Delete(ctx, id)
 }

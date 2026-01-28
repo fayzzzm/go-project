@@ -86,7 +86,7 @@ BEGIN
     RETURN QUERY
     SELECT id, email, name, address, phone, role, app_metadata, user_metadata, ''::text as password, created_at, updated_at, tenant_id
     FROM users.user
-    WHERE id = r.id;
+    WHERE id = r.id AND tenant_id = r.tenant_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER STABLE;
 
@@ -118,7 +118,7 @@ BEGIN
         app_metadata = COALESCE(r.app_metadata, app_metadata),
         user_metadata = COALESCE(r.user_metadata, user_metadata),
         updated_at = NOW()
-    WHERE id = r.id
+    WHERE id = r.id AND tenant_id = r.tenant_id
     RETURNING id, email, name, address, phone, role, app_metadata, user_metadata, ''::text as password, created_at, updated_at, tenant_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -127,7 +127,7 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 CREATE OR REPLACE FUNCTION users.delete(r users.user_request)
 RETURNS VOID AS $$
 BEGIN
-    DELETE FROM users.user WHERE id = r.id;
+    DELETE FROM users.user WHERE id = r.id AND tenant_id = r.tenant_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 

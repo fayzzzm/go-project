@@ -16,18 +16,29 @@ type TenantUseCase interface {
 }
 
 type TenantController struct {
-	uc TenantUseCase
+	uc     TenantUseCase
+	userUC UserUseCase
 }
 
-func NewTenantController(r gin.IRouter, uc TenantUseCase) {
-	c := &TenantController{uc: uc}
+func NewTenantController(r gin.IRouter, uc TenantUseCase, userUC UserUseCase) {
+	c := &TenantController{uc: uc, userUC: userUC}
 
 	tenants := r.Group("/tenants")
+	tenants.Use(middleware.AuthMiddleware(), middleware.RequireTenant())
 	{
 		tenants.GET("", utils.Handle(c.List, http.StatusOK))
+
+		users := tenants.Group("/users")
+		{
+			users.GET("", utils.Handle(c.ListTenantUsers, http.StatusOK))
+		}
 	}
 }
 
-func (c *TenantController) List(ctx *gin.Context) (any, error) {
+func (c *TenantController) List(ctx *gin.Context) ([]usecase.TenantOutput, error) {
 	return c.uc.List(ctx.Request.Context(), middleware.GetPagination(ctx))
+}
+
+func (c *TenantController) ListTenantUsers(ctx *gin.Context) ([]usecase.UserOutput, error) {
+	return c.userUC.List(ctx.Request.Context(), middleware.GetPagination(ctx), "", middleware.GetTenantID(ctx))
 }

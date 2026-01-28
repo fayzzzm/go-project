@@ -84,7 +84,7 @@ BEGIN
     SELECT id, name, description, serial_number, epc, 
            device_profile_id, cabinet_id, team_id, tenant_id, status, created_at
     FROM devices.device
-    WHERE id = r.id;
+    WHERE id = r.id AND (r.tenant_id IS NULL OR tenant_id = r.tenant_id);
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER STABLE;
 
@@ -115,7 +115,7 @@ BEGIN
         cabinet_id = COALESCE(r.cabinet_id, cabinet_id),
         team_id = COALESCE(r.team_id, team_id),
         updated_at = NOW()
-    WHERE id = r.id
+    WHERE id = r.id AND (r.tenant_id IS NULL OR tenant_id = r.tenant_id)
     RETURNING id, name, description, serial_number, epc, 
               device_profile_id, cabinet_id, team_id, tenant_id, status, created_at;
 END;
@@ -124,7 +124,7 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 CREATE OR REPLACE FUNCTION devices.delete(r devices.device_request)
 RETURNS VOID AS $$
 BEGIN
-    DELETE FROM devices.device WHERE id = r.id;
+    DELETE FROM devices.device WHERE id = r.id AND (r.tenant_id IS NULL OR tenant_id = r.tenant_id);
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
@@ -135,7 +135,7 @@ BEGIN
     SELECT id, name, description, serial_number, epc, 
            device_profile_id, cabinet_id, team_id, tenant_id, status, created_at
     FROM devices.device
-    WHERE epc = r.epc;
+    WHERE epc = r.epc AND (r.tenant_id IS NULL OR tenant_id = r.tenant_id);
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER STABLE;
 
@@ -146,7 +146,7 @@ BEGIN
     SELECT id, name, description, serial_number, epc, 
            device_profile_id, cabinet_id, team_id, tenant_id, status, created_at
     FROM devices.device
-    WHERE serial_number = r.serial_number;
+    WHERE serial_number = r.serial_number AND (r.tenant_id IS NULL OR tenant_id = r.tenant_id);
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER STABLE;
 

@@ -62,7 +62,7 @@ BEGIN
     RETURN QUERY
     SELECT id, name, description, tenant_id, created_at, updated_at
     FROM device_profiles.device_profile
-    WHERE id = r.id;
+    WHERE id = r.id AND (r.tenant_id IS NULL OR tenant_id = r.tenant_id);
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER STABLE;
 
@@ -90,7 +90,7 @@ BEGIN
         name = COALESCE(r.name, name),
         description = COALESCE(r.description, description),
         updated_at = NOW()
-    WHERE id = r.id
+    WHERE id = r.id AND (r.tenant_id IS NULL OR tenant_id = r.tenant_id)
     RETURNING id, name, description, tenant_id, created_at, updated_at;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -99,7 +99,7 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 CREATE OR REPLACE FUNCTION device_profiles.delete(r device_profiles.device_profile_request)
 RETURNS VOID AS $$
 BEGIN
-    DELETE FROM device_profiles.device_profile WHERE id = r.id;
+    DELETE FROM device_profiles.device_profile WHERE id = r.id AND (r.tenant_id IS NULL OR tenant_id = r.tenant_id);
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 

@@ -31,7 +31,7 @@ func (r *UserRepo) Create(ctx context.Context, u *domain.User) error {
 }
 
 func (r *UserRepo) GetByID(ctx context.Context, id string) (*domain.User, error) {
-	return ExecQueryOne[domain.User](ctx, r.pool, queryUserGetByID, UserRequest{ID: &id})
+	return ExecQueryOne[domain.User](ctx, r.pool, queryUserGetByID, &UserRequest{ID: &id})
 }
 
 func (r *UserRepo) Update(ctx context.Context, u *domain.User) error {
@@ -39,12 +39,13 @@ func (r *UserRepo) Update(ctx context.Context, u *domain.User) error {
 }
 
 func (r *UserRepo) Delete(ctx context.Context, id string) error {
-	return Exec(ctx, r.pool, queryUserDelete, UserRequest{ID: &id})
+	return Exec(ctx, r.pool, queryUserDelete, &UserRequest{ID: &id})
 }
 
 func (r *UserRepo) List(ctx context.Context, limit, offset int, teamID, tenantID string) ([]domain.User, error) {
-	return ExecQueryList[domain.User](ctx, r.pool, queryUserList, UserRequest{
-		LimitVal: &limit, OffsetVal: &offset, TeamID: utils.StringPtrOrNil(teamID), TenantID: utils.StringPtrOrNil(tenantID),
+	return ExecQueryList[domain.User](ctx, r.pool, queryUserList, &UserRequest{
+		LimitVal: &limit, OffsetVal: &offset, TenantID: utils.StringPtrOrNil(tenantID),
+		TeamID: utils.StringPtrOrNil(teamID),
 	})
 }
 

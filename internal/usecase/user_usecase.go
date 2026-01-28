@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/fayzzzm/go-project/internal/domain"
-	"github.com/fayzzzm/go-project/pkg/utils"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -29,10 +28,10 @@ type CreateUserInput struct {
 }
 
 type UpdateUserInput struct {
-	Email        string                 `json:"email"`
-	Name         string                 `json:"name"`
-	Address      string                 `json:"address"`
-	Phone        string                 `json:"phone"`
+	Email        *string                `json:"email"`
+	Name         *string                `json:"name"`
+	Address      *string                `json:"address"`
+	Phone        *string                `json:"phone"`
 	AppMetadata  map[string]interface{} `json:"app_metadata"`
 	UserMetadata map[string]interface{} `json:"user_metadata"`
 }
@@ -57,7 +56,6 @@ func NewUserUseCase(svc UserServicer) *UserUseCase {
 }
 
 func (uc *UserUseCase) Create(ctx context.Context, input CreateUserInput) (*UserOutput, error) {
-	// Hash Password
 	hashedBytes, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return nil, err
@@ -104,12 +102,28 @@ func (uc *UserUseCase) List(ctx context.Context, p domain.Pagination, teamID, te
 }
 
 func (uc *UserUseCase) Update(ctx context.Context, id string, input UpdateUserInput) (*UserOutput, error) {
-	user := &domain.User{
-		ID:      id,
-		Name:    utils.StringPtrOrNil(input.Name),
-		Address: utils.StringPtrOrNil(input.Address),
-		Phone:   utils.StringPtrOrNil(input.Phone),
-		Email:   input.Email,
+	user, err := uc.svc.GetByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	if input.AppMetadata != nil {
+		user.AppMetadata = input.AppMetadata
+	}
+	if input.UserMetadata != nil {
+		user.UserMetadata = input.UserMetadata
+	}
+	if input.Email != nil {
+		user.Email = *input.Email
+	}
+	if input.Name != nil {
+		user.Name = input.Name
+	}
+	if input.Address != nil {
+		user.Address = input.Address
+	}
+	if input.Phone != nil {
+		user.Phone = input.Phone
 	}
 
 	if err := uc.svc.Update(ctx, user); err != nil {

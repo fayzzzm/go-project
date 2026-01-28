@@ -28,7 +28,7 @@ func (r *DeviceProfileRepo) Create(ctx context.Context, dp *domain.DeviceProfile
 }
 
 func (r *DeviceProfileRepo) GetByID(ctx context.Context, id string) (*domain.DeviceProfile, error) {
-	return ExecQueryOne[domain.DeviceProfile](ctx, r.pool, queryDeviceProfileGetByID, DeviceProfileRequest{ID: &id})
+	return ExecQueryOne[domain.DeviceProfile](ctx, r.pool, queryDeviceProfileGetByID, &DeviceProfileRequest{ID: &id})
 }
 
 func (r *DeviceProfileRepo) Update(ctx context.Context, dp *domain.DeviceProfile) error {
@@ -36,9 +36,11 @@ func (r *DeviceProfileRepo) Update(ctx context.Context, dp *domain.DeviceProfile
 }
 
 func (r *DeviceProfileRepo) Delete(ctx context.Context, id string) error {
-	return Exec(ctx, r.pool, queryDeviceProfileDelete, DeviceProfileRequest{ID: &id})
+	return Exec(ctx, r.pool, queryDeviceProfileDelete, &DeviceProfileRequest{ID: &id})
 }
 
 func (r *DeviceProfileRepo) List(ctx context.Context, limit, offset int) ([]domain.DeviceProfile, error) {
-	return ExecQueryList[domain.DeviceProfile](ctx, r.pool, queryDeviceProfileList, DeviceProfileRequest{LimitVal: &limit, OffsetVal: &offset})
+	return ExecQueryList[domain.DeviceProfile](ctx, r.pool, queryDeviceProfileList, &DeviceProfileRequest{
+		LimitVal: &limit, OffsetVal: &offset,
+	})
 }

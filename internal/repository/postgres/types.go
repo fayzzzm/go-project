@@ -5,20 +5,6 @@ import (
 	"github.com/fayzzzm/go-project/pkg/utils"
 )
 
-type DeviceRequest struct {
-	ID              *string `db:"id"`
-	Name            *string `db:"name"`
-	Description     *string `db:"description"`
-	SerialNumber    *string `db:"serial_number"`
-	EPC             *string `db:"epc"`
-	DeviceProfileID *string `db:"device_profile_id"`
-	CabinetID       *string `db:"cabinet_id"`
-	TeamID          *string `db:"team_id"`
-	TenantID        *string `db:"tenant_id"`
-	LimitVal        *int    `db:"limit_val"`
-	OffsetVal       *int    `db:"offset_val"`
-}
-
 type UserRequest struct {
 	ID           *string                `db:"id"`
 	Email        *string                `db:"email"`
@@ -33,6 +19,20 @@ type UserRequest struct {
 	OffsetVal    *int                   `db:"offset_val"`
 	TeamID       *string                `db:"team_id"`
 	TenantID     *string                `db:"tenant_id"`
+}
+
+type DeviceRequest struct {
+	ID              *string `db:"id"`
+	Name            *string `db:"name"`
+	Description     *string `db:"description"`
+	SerialNumber    *string `db:"serial_number"`
+	EPC             *string `db:"epc"`
+	DeviceProfileID *string `db:"device_profile_id"`
+	CabinetID       *string `db:"cabinet_id"`
+	TeamID          *string `db:"team_id"`
+	TenantID        *string `db:"tenant_id"`
+	LimitVal        *int    `db:"limit_val"`
+	OffsetVal       *int    `db:"offset_val"`
 }
 
 type CabinetRequest struct {
@@ -81,8 +81,8 @@ type TenantRequest struct {
 	OffsetVal *int    `db:"offset_val"`
 }
 
-func NewUserRequest(u *domain.User) UserRequest {
-	return UserRequest{
+func NewUserRequest(u *domain.User) *UserRequest {
+	return &UserRequest{
 		ID:           utils.StringPtrOrNil(u.ID),
 		Email:        utils.StringPtrOrNil(u.Email),
 		Name:         u.Name,
@@ -96,8 +96,8 @@ func NewUserRequest(u *domain.User) UserRequest {
 	}
 }
 
-func NewTeamRequest(t *domain.Team) TeamRequest {
-	return TeamRequest{
+func NewTeamRequest(t *domain.Team) *TeamRequest {
+	return &TeamRequest{
 		ID:       utils.StringPtrOrNil(t.ID),
 		Name:     &t.Name,
 		Status:   t.Status,
@@ -105,12 +105,12 @@ func NewTeamRequest(t *domain.Team) TeamRequest {
 	}
 }
 
-func NewDeviceRequest(d *domain.Device) DeviceRequest {
-	return DeviceRequest{
+func NewDeviceRequest(d *domain.Device) *DeviceRequest {
+	return &DeviceRequest{
 		ID:              utils.StringPtrOrNil(d.ID),
-		Name:            utils.StringPtrOrNil(d.Name),
+		Name:            &d.Name,
 		Description:     d.Description,
-		SerialNumber:    utils.StringPtrOrNil(d.SerialNumber),
+		SerialNumber:    &d.SerialNumber,
 		EPC:             d.EPC,
 		DeviceProfileID: d.DeviceProfileID,
 		CabinetID:       d.CabinetID,
@@ -119,10 +119,10 @@ func NewDeviceRequest(d *domain.Device) DeviceRequest {
 	}
 }
 
-func NewCabinetRequest(c *domain.Cabinet, userID *string) CabinetRequest {
-	return CabinetRequest{
+func NewCabinetRequest(c *domain.Cabinet, userID *string) *CabinetRequest {
+	return &CabinetRequest{
 		ID:          utils.StringPtrOrNil(c.ID),
-		Name:        utils.StringPtrOrNil(c.Name),
+		Name:        &c.Name,
 		Description: c.Description,
 		Location:    c.Location,
 		MachineID:   c.MachineID,
@@ -133,10 +133,10 @@ func NewCabinetRequest(c *domain.Cabinet, userID *string) CabinetRequest {
 	}
 }
 
-func NewDeviceProfileRequest(dp *domain.DeviceProfile) DeviceProfileRequest {
-	return DeviceProfileRequest{
+func NewDeviceProfileRequest(dp *domain.DeviceProfile) *DeviceProfileRequest {
+	return &DeviceProfileRequest{
 		ID:          utils.StringPtrOrNil(dp.ID),
-		Name:        utils.StringPtrOrNil(dp.Name),
+		Name:        &dp.Name,
 		Description: dp.Description,
 		TenantID:    dp.TenantID,
 	}

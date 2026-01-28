@@ -8,10 +8,10 @@ INSERT INTO teams.team (id, name, status, tenant_id) VALUES
 ON CONFLICT (id) DO NOTHING;
 
 -- 2. USERS
-INSERT INTO users.user (id, email, name, role, tenant_id) VALUES
-    ('aaaa1111-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'admin@itsware.com', 'Super Admin', 'admin', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11'),
-    ('bbbb2222-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'tech@itsware.com', 'Field Technician', 'user', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11'),
-    ('cccc3333-cccc-cccc-cccc-cccccccccccc', 'tenant_user@itsware.com', 'Tenant User', 'user', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11')
+INSERT INTO users.user (id, email, name, role, tenant_id, password) VALUES
+    ('aaaa1111-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'admin@itsware.com', 'Super Admin', 'admin', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', '$2a$10$F.K57ZES07MXSoenLRpSKuQc2SjUMQUGFbWhFdlN/Au8/0oe.NP8W'),
+    ('bbbb2222-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'tech@itsware.com', 'Field Technician', 'user', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', '$2a$10$F.K57ZES07MXSoenLRpSKuQc2SjUMQUGFbWhFdlN/Au8/0oe.NP8W'),
+    ('cccc3333-cccc-cccc-cccc-cccccccccccc', 'tenant_user@itsware.com', 'Tenant User', 'user', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', '$2a$10$F.K57ZES07MXSoenLRpSKuQc2SjUMQUGFbWhFdlN/Au8/0oe.NP8W')
 ON CONFLICT (email) DO NOTHING;
 
 -- 3. CABINETS

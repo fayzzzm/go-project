@@ -22,12 +22,12 @@ type TeamServicer interface {
 type CreateTeamInput struct {
 	Name     string `json:"name" binding:"required"`
 	Status   string `json:"status"`
-	TenantID string `json:"tenant_id"`
+	TenantID string `json:"tenant_id" binding:"required"`
 }
 
 type UpdateTeamInput struct {
-	Name   string `json:"name"`
-	Status string `json:"status"`
+	Name   *string `json:"name"`
+	Status *string `json:"status"`
 }
 
 type AddMemberInput struct {
@@ -109,10 +109,16 @@ func (uc *TeamUseCase) ListForUser(ctx context.Context, userID string) ([]TeamOu
 }
 
 func (uc *TeamUseCase) Update(ctx context.Context, id string, input UpdateTeamInput) (*TeamOutput, error) {
-	team := &domain.Team{
-		ID:     id,
-		Name:   input.Name,
-		Status: utils.StringPtrOrNil(input.Status),
+	team, err := uc.svc.GetByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	if input.Name != nil {
+		team.Name = *input.Name
+	}
+	if input.Status != nil {
+		team.Status = input.Status
 	}
 
 	if err := uc.svc.Update(ctx, team); err != nil {

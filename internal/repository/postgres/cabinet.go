@@ -28,7 +28,7 @@ func (r *CabinetRepo) Create(ctx context.Context, c *domain.Cabinet, userID stri
 }
 
 func (r *CabinetRepo) GetByID(ctx context.Context, id string) (*domain.Cabinet, error) {
-	return ExecQueryOne[domain.Cabinet](ctx, r.pool, queryCabinetGetByID, CabinetRequest{ID: &id})
+	return ExecQueryOne[domain.Cabinet](ctx, r.pool, queryCabinetGetByID, &CabinetRequest{ID: &id})
 }
 
 func (r *CabinetRepo) Update(ctx context.Context, c *domain.Cabinet) error {
@@ -36,9 +36,11 @@ func (r *CabinetRepo) Update(ctx context.Context, c *domain.Cabinet) error {
 }
 
 func (r *CabinetRepo) Delete(ctx context.Context, id string) error {
-	return Exec(ctx, r.pool, queryCabinetDelete, CabinetRequest{ID: &id})
+	return Exec(ctx, r.pool, queryCabinetDelete, &CabinetRequest{ID: &id})
 }
 
 func (r *CabinetRepo) List(ctx context.Context, limit, offset int) ([]domain.Cabinet, error) {
-	return ExecQueryList[domain.Cabinet](ctx, r.pool, queryCabinetList, CabinetRequest{LimitVal: &limit, OffsetVal: &offset})
+	return ExecQueryList[domain.Cabinet](ctx, r.pool, queryCabinetList, &CabinetRequest{
+		LimitVal: &limit, OffsetVal: &offset,
+	})
 }

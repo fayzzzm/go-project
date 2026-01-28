@@ -29,7 +29,7 @@ func NewTeamController(r gin.IRouter, uc TeamUseCase) {
 	c := &TeamController{uc: uc}
 
 	teams := r.Group("/teams")
-	teams.Use(middleware.AuthMiddleware())
+	teams.Use(middleware.AuthMiddleware(), middleware.RequireTenant())
 	{
 		teams.POST("", middleware.BindJSON[usecase.CreateTeamInput](), utils.Handle(c.Create, http.StatusCreated))
 		teams.GET("", utils.Handle(c.List, http.StatusOK))
@@ -40,29 +40,29 @@ func NewTeamController(r gin.IRouter, uc TeamUseCase) {
 	}
 }
 
-func (c *TeamController) Create(ctx *gin.Context) (any, error) {
+func (c *TeamController) Create(ctx *gin.Context) (*usecase.TeamOutput, error) {
 	return c.uc.Create(ctx.Request.Context(), middleware.GetBody[usecase.CreateTeamInput](ctx))
 }
 
-func (c *TeamController) GetByID(ctx *gin.Context) (any, error) {
+func (c *TeamController) GetByID(ctx *gin.Context) (*usecase.TeamOutput, error) {
 	return c.uc.GetByID(ctx.Request.Context(), ctx.Param("id"))
 }
 
-func (c *TeamController) List(ctx *gin.Context) (any, error) {
+func (c *TeamController) List(ctx *gin.Context) ([]usecase.TeamOutput, error) {
 	if filterUserID := ctx.Query("user_id"); filterUserID != "" {
 		return c.uc.ListForUser(ctx.Request.Context(), filterUserID)
 	}
 	return c.uc.List(ctx.Request.Context(), middleware.GetPagination(ctx), middleware.GetTenantID(ctx), ctx.GetString(middleware.ContextUserID))
 }
 
-func (c *TeamController) Update(ctx *gin.Context) (any, error) {
+func (c *TeamController) Update(ctx *gin.Context) (*usecase.TeamOutput, error) {
 	return c.uc.Update(ctx.Request.Context(), ctx.Param("id"), middleware.GetBody[usecase.UpdateTeamInput](ctx))
 }
 
-func (c *TeamController) Delete(ctx *gin.Context) (any, error) {
-	return nil, c.uc.Delete(ctx.Request.Context(), ctx.Param("id"))
+func (c *TeamController) Delete(ctx *gin.Context) (struct{}, error) {
+	return struct{}{}, c.uc.Delete(ctx.Request.Context(), ctx.Param("id"))
 }
 
-func (c *TeamController) AddMember(ctx *gin.Context) (any, error) {
+func (c *TeamController) AddMember(ctx *gin.Context) (*usecase.MemberOutput, error) {
 	return c.uc.AddMember(ctx.Request.Context(), ctx.Param("id"), middleware.GetBody[usecase.AddMemberInput](ctx))
 }

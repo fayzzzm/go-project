@@ -1,13 +1,13 @@
 @baseUrl = http://localhost:8080/api/v1
 @tenantId = a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11
-@createdUserId = 480761ea-bcdd-4e33-8eb3-0d10ce64de4d
+@createdUserId = 04700a73-aa68-4872-8fcf-ade9ee2a8d4a
 @createdDeviceId = {{paste_device_id}}
 @createdCabinetId = {{paste_cabinet_id}}
 @createdTeamId = 34c5a214-9e6b-4bb1-9f91-3328b222805c
 @createdProfileId = {{paste_profile_id}}
 
-@password = secret_Pass123!
-@authToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImRldmVsb3BlcjFAaXRzd2FyZS5jb20iLCJleHAiOjE3Njk2OTA2MTIsInJvbGUiOiJ1c2VyIiwic3ViIjoiNDgwNzYxZWEtYmNkZC00ZTMzLThlYjMtMGQxMGNlNjRkZTRkIiwidGVuYW50X2lkIjoiYTBlZWJjOTktOWMwYi00ZWY4LWJiNmQtNmJiOWJkMzgwYTExIn0.8GmwqQkl4noKLHOthAQkQI-oKpw4PD_j813ujWm5awA
+@password = password123
+@authToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFkbWluQGl0c3dhcmUuY29tIiwiZXhwIjoxNzY5NzA2NDQ4LCJyb2xlIjoiYWRtaW4iLCJzdWIiOiJhYWFhMTExMS1hYWFhLWFhYWEtYWFhYS1hYWFhYWFhYWFhYWEiLCJ0ZW5hbnRfaWQiOiJhMGVlYmM5OS05YzBiLTRlZjgtYmI2ZC02YmI5YmQzODBhMTEifQ.tiolDCtNseTqvlxDAjf4DWxBabBVbvPOUisGC9Qa4NE
 
 ### ============================================================================
 ### TENANTS
@@ -18,17 +18,24 @@
 GET {{baseUrl}}/tenants
 Content-Type: application/json
 
+### 1b. List Tenant Users
+# @name listTenantUsers
+GET {{baseUrl}}/tenants/users
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+X-Tenant-ID: {{tenantId}}
+
 ### ============================================================================
 ### AUTHENTICATION
 ### ============================================================================
 
-### 1b. Login
+### 1c. Login
 # @name login
 POST {{baseUrl}}/auth/login
 Content-Type: application/json
 
 {
-    "email": "developer1@itsware.com",
+    "email": "admin@itsware.com",
     "password": "{{password}}"
 }
 
@@ -41,10 +48,11 @@ Content-Type: application/json
 # @name createUser
 POST {{baseUrl}}/users
 Content-Type: application/json
+Authorization: Bearer {{authToken}}
 X-Tenant-ID: {{tenantId}}
 
 {
-    "email": "developer1@itsware.com",
+    "email": "developer@itsware.com",
     "password": "{{password}}",
     "name": "10x Developer",
     "address": "Silicon Valley",
@@ -64,13 +72,7 @@ Content-Type: application/json
 Authorization: Bearer {{authToken}}
 X-Tenant-ID: {{tenantId}}
 
-### 4. List Users
-GET {{baseUrl}}/users
-Content-Type: application/json
-Authorization: Bearer {{authToken}}
-X-Tenant-ID: {{tenantId}}
-
-### 5. Update User
+### 4. Update User
 PUT {{baseUrl}}/users/{{createdUserId}}
 Content-Type: application/json
 Authorization: Bearer {{authToken}}

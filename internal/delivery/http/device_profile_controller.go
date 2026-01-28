@@ -27,7 +27,7 @@ func NewDeviceProfileController(r gin.IRouter, uc DeviceProfileUseCase) {
 	c := &DeviceProfileController{uc: uc}
 
 	dps := r.Group("/device_profiles")
-	dps.Use(middleware.AuthMiddleware())
+	dps.Use(middleware.AuthMiddleware(), middleware.RequireTenant())
 	{
 		dps.POST("", middleware.BindJSON[usecase.CreateDeviceProfileInput](), utils.Handle(c.Create, http.StatusCreated))
 		dps.GET("", utils.Handle(c.List, http.StatusOK))
@@ -37,22 +37,22 @@ func NewDeviceProfileController(r gin.IRouter, uc DeviceProfileUseCase) {
 	}
 }
 
-func (c *DeviceProfileController) Create(ctx *gin.Context) (any, error) {
+func (c *DeviceProfileController) Create(ctx *gin.Context) (*usecase.DeviceProfileOutput, error) {
 	return c.uc.Create(ctx.Request.Context(), middleware.GetBody[usecase.CreateDeviceProfileInput](ctx))
 }
 
-func (c *DeviceProfileController) GetByID(ctx *gin.Context) (any, error) {
+func (c *DeviceProfileController) GetByID(ctx *gin.Context) (*usecase.DeviceProfileOutput, error) {
 	return c.uc.GetByID(ctx.Request.Context(), ctx.Param("id"))
 }
 
-func (c *DeviceProfileController) List(ctx *gin.Context) (any, error) {
+func (c *DeviceProfileController) List(ctx *gin.Context) ([]usecase.DeviceProfileOutput, error) {
 	return c.uc.List(ctx.Request.Context(), middleware.GetPagination(ctx))
 }
 
-func (c *DeviceProfileController) Update(ctx *gin.Context) (any, error) {
+func (c *DeviceProfileController) Update(ctx *gin.Context) (*usecase.DeviceProfileOutput, error) {
 	return c.uc.Update(ctx.Request.Context(), ctx.Param("id"), middleware.GetBody[usecase.UpdateDeviceProfileInput](ctx))
 }
 
-func (c *DeviceProfileController) Delete(ctx *gin.Context) (any, error) {
-	return nil, c.uc.Delete(ctx.Request.Context(), ctx.Param("id"))
+func (c *DeviceProfileController) Delete(ctx *gin.Context) (struct{}, error) {
+	return struct{}{}, c.uc.Delete(ctx.Request.Context(), ctx.Param("id"))
 }

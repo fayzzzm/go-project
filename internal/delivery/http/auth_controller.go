@@ -27,6 +27,6 @@ func NewAuthController(r gin.IRouter, uc AuthUseCase) {
 	}
 }
 
-func (c *AuthController) Login(ctx *gin.Context) (any, error) {
+func (c *AuthController) Login(ctx *gin.Context) (*usecase.LoginOutput, error) {
 	return c.uc.Login(ctx.Request.Context(), middleware.GetBody[usecase.LoginInput](ctx))
 }

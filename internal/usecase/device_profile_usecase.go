@@ -19,12 +19,12 @@ type DeviceProfileServicer interface {
 type CreateDeviceProfileInput struct {
 	Name        string `json:"name" binding:"required"`
 	Description string `json:"description"`
-	TenantID    string `json:"tenant_id"`
+	TenantID    string `json:"tenant_id" binding:"required"`
 }
 
 type UpdateDeviceProfileInput struct {
-	Name        string `json:"name"`
-	Description string `json:"description"`
+	Name        *string `json:"name"`
+	Description *string `json:"description"`
 }
 
 type DeviceProfileOutput struct {
@@ -81,10 +81,16 @@ func (uc *DeviceProfileUseCase) List(ctx context.Context, p domain.Pagination) (
 }
 
 func (uc *DeviceProfileUseCase) Update(ctx context.Context, id string, input UpdateDeviceProfileInput) (*DeviceProfileOutput, error) {
-	dp := &domain.DeviceProfile{
-		ID:          id,
-		Name:        input.Name,
-		Description: utils.StringPtrOrNil(input.Description),
+	dp, err := uc.svc.GetByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	if input.Name != nil {
+		dp.Name = *input.Name
+	}
+	if input.Description != nil {
+		dp.Description = input.Description
 	}
 
 	if err := uc.svc.Update(ctx, dp); err != nil {

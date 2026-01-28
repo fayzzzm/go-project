@@ -28,35 +28,29 @@ func NewUserController(r gin.IRouter, uc UserUseCase) {
 
 	users := r.Group("/users")
 	{
-		users.POST("", middleware.BindJSON[usecase.CreateUserInput](), utils.Handle(c.Create, http.StatusCreated))
-
 		protected := users.Group("")
-		protected.Use(middleware.AuthMiddleware())
+		protected.Use(middleware.AuthMiddleware(), middleware.RequireTenant())
 		{
-			protected.GET("", utils.Handle(c.List, http.StatusOK))
+			protected.POST("", middleware.RequireRole("admin"), middleware.BindJSON[usecase.CreateUserInput](), utils.Handle(c.Create, http.StatusCreated))
 			protected.GET("/:id", utils.Handle(c.GetByID, http.StatusOK))
-			protected.PUT("/:id", middleware.BindJSON[usecase.UpdateUserInput](), utils.Handle(c.Update, http.StatusOK))
-			protected.DELETE("/:id", utils.Handle(c.Delete, http.StatusNoContent))
+			protected.PUT("/:id", middleware.RequireRole("admin"), middleware.BindJSON[usecase.UpdateUserInput](), utils.Handle(c.Update, http.StatusOK))
+			protected.DELETE("/:id", middleware.RequireRole("admin"), utils.Handle(c.Delete, http.StatusNoContent))
 		}
 	}
 }
 
-func (c *UserController) Create(ctx *gin.Context) (any, error) {
+func (c *UserController) Create(ctx *gin.Context) (*usecase.UserOutput, error) {
 	return c.uc.Create(ctx.Request.Context(), middleware.GetBody[usecase.CreateUserInput](ctx))
 }
 
-func (c *UserController) GetByID(ctx *gin.Context) (any, error) {
+func (c *UserController) GetByID(ctx *gin.Context) (*usecase.UserOutput, error) {
 	return c.uc.GetByID(ctx.Request.Context(), ctx.Param("id"))
 }
 
-func (c *UserController) List(ctx *gin.Context) (any, error) {
-	return c.uc.List(ctx.Request.Context(), middleware.GetPagination(ctx), ctx.Query("team_id"), middleware.GetTenantID(ctx))
-}
-
-func (c *UserController) Update(ctx *gin.Context) (any, error) {
+func (c *UserController) Update(ctx *gin.Context) (*usecase.UserOutput, error) {
 	return c.uc.Update(ctx.Request.Context(), ctx.Param("id"), middleware.GetBody[usecase.UpdateUserInput](ctx))
 }
 
-func (c *UserController) Delete(ctx *gin.Context) (any, error) {
-	return nil, c.uc.Delete(ctx.Request.Context(), ctx.Param("id"))
+func (c *UserController) Delete(ctx *gin.Context) (struct{}, error) {
+	return struct{}{}, c.uc.Delete(ctx.Request.Context(), ctx.Param("id"))
 }

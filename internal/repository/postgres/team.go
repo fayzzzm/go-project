@@ -34,7 +34,7 @@ func (r *TeamRepo) IsMember(ctx context.Context, teamID, userID string) (bool, e
 }
 
 func (r *TeamRepo) AddMember(ctx context.Context, teamID, userID, role string) (*domain.Member, error) {
-	return ExecQueryOne[domain.Member](ctx, r.pool, queryTeamAddMember, MemberRequest{
+	return ExecQueryOne[domain.Member](ctx, r.pool, queryTeamAddMember, &MemberRequest{
 		TeamID: &teamID, UserID: &userID, Role: &role,
 	})
 }
@@ -44,7 +44,7 @@ func (r *TeamRepo) Create(ctx context.Context, t *domain.Team) error {
 }
 
 func (r *TeamRepo) GetByID(ctx context.Context, id string) (*domain.Team, error) {
-	return ExecQueryOne[domain.Team](ctx, r.pool, queryTeamGetByID, TeamRequest{ID: &id})
+	return ExecQueryOne[domain.Team](ctx, r.pool, queryTeamGetByID, &TeamRequest{ID: &id})
 }
 
 func (r *TeamRepo) Update(ctx context.Context, t *domain.Team) error {
@@ -52,12 +52,13 @@ func (r *TeamRepo) Update(ctx context.Context, t *domain.Team) error {
 }
 
 func (r *TeamRepo) Delete(ctx context.Context, id string) error {
-	return Exec(ctx, r.pool, queryTeamDelete, TeamRequest{ID: &id})
+	return Exec(ctx, r.pool, queryTeamDelete, &TeamRequest{ID: &id})
 }
 
 func (r *TeamRepo) List(ctx context.Context, limit, offset int, tenantID, userID string) ([]domain.Team, error) {
-	return ExecQueryList[domain.Team](ctx, r.pool, queryTeamList, TeamRequest{
-		LimitVal: &limit, OffsetVal: &offset, TenantID: utils.StringPtrOrNil(tenantID), UserID: utils.StringPtrOrNil(userID),
+	return ExecQueryList[domain.Team](ctx, r.pool, queryTeamList, &TeamRequest{
+		LimitVal: &limit, OffsetVal: &offset, TenantID: utils.StringPtrOrNil(tenantID),
+		UserID: utils.StringPtrOrNil(userID),
 	})
 }
 

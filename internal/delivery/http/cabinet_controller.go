@@ -27,7 +27,7 @@ func NewCabinetController(r gin.IRouter, uc CabinetUseCase) {
 	c := &CabinetController{uc: uc}
 
 	cabinets := r.Group("/cabinets")
-	cabinets.Use(middleware.AuthMiddleware())
+	cabinets.Use(middleware.AuthMiddleware(), middleware.RequireTenant())
 	{
 		cabinets.POST("", middleware.BindJSON[usecase.CreateCabinetInput](), utils.Handle(c.Create, http.StatusCreated))
 		cabinets.GET("", utils.Handle(c.List, http.StatusOK))
@@ -37,22 +37,22 @@ func NewCabinetController(r gin.IRouter, uc CabinetUseCase) {
 	}
 }
 
-func (c *CabinetController) Create(ctx *gin.Context) (any, error) {
+func (c *CabinetController) Create(ctx *gin.Context) (*usecase.CabinetOutput, error) {
 	return c.uc.Create(ctx.Request.Context(), middleware.GetBody[usecase.CreateCabinetInput](ctx), ctx.GetString(middleware.ContextUserID))
 }
 
-func (c *CabinetController) GetByID(ctx *gin.Context) (any, error) {
+func (c *CabinetController) GetByID(ctx *gin.Context) (*usecase.CabinetOutput, error) {
 	return c.uc.GetByID(ctx.Request.Context(), ctx.Param("id"))
 }
 
-func (c *CabinetController) List(ctx *gin.Context) (any, error) {
+func (c *CabinetController) List(ctx *gin.Context) ([]usecase.CabinetOutput, error) {
 	return c.uc.List(ctx.Request.Context(), middleware.GetPagination(ctx))
 }
 
-func (c *CabinetController) Update(ctx *gin.Context) (any, error) {
+func (c *CabinetController) Update(ctx *gin.Context) (*usecase.CabinetOutput, error) {
 	return c.uc.Update(ctx.Request.Context(), ctx.Param("id"), middleware.GetBody[usecase.UpdateCabinetInput](ctx))
 }
 
-func (c *CabinetController) Delete(ctx *gin.Context) (any, error) {
-	return nil, c.uc.Delete(ctx.Request.Context(), ctx.Param("id"))
+func (c *CabinetController) Delete(ctx *gin.Context) (struct{}, error) {
+	return struct{}{}, c.uc.Delete(ctx.Request.Context(), ctx.Param("id"))
 }

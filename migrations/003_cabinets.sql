@@ -93,7 +93,7 @@ BEGIN
     RETURN QUERY
     SELECT id, name, description, location, machine_id, status, team_id, tenant_id, created_at, created_by, updated_at, updated_by
     FROM cabinets.cabinet
-    WHERE id = r.id;
+    WHERE id = r.id AND (r.tenant_id IS NULL OR tenant_id = r.tenant_id);
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER STABLE;
 
@@ -123,7 +123,7 @@ BEGIN
         status = COALESCE(r.status, status),
         team_id = COALESCE(r.team_id, team_id),
         updated_at = NOW()
-    WHERE id = r.id
+    WHERE id = r.id AND (r.tenant_id IS NULL OR tenant_id = r.tenant_id)
     RETURNING id, name, description, location, machine_id, status, team_id, tenant_id, created_at, created_by, updated_at, updated_by;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -131,6 +131,6 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 CREATE OR REPLACE FUNCTION cabinets.delete(r cabinets.cabinet_request)
 RETURNS VOID AS $$
 BEGIN
-    DELETE FROM cabinets.cabinet WHERE id = r.id;
+    DELETE FROM cabinets.cabinet WHERE id = r.id AND (r.tenant_id IS NULL OR tenant_id = r.tenant_id);
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;

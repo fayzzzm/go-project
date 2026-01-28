@@ -19,14 +19,14 @@ type CreateCabinetInput struct {
 	Name     string `json:"name" binding:"required"`
 	Location string `json:"location"`
 	TeamID   string `json:"team_id" binding:"required,uuid"`
-	TenantID string `json:"tenant_id"`
+	TenantID string `json:"tenant_id" binding:"required"`
 }
 
 type UpdateCabinetInput struct {
-	Name     string `json:"name"`
-	Location string `json:"location"`
-	TeamID   string `json:"team_id" binding:"omitempty,uuid"`
-	TenantID string `json:"tenant_id"`
+	Name     *string `json:"name"`
+	Location *string `json:"location"`
+	TeamID   *string `json:"team_id" binding:"omitempty,uuid"`
+	TenantID string  `json:"tenant_id" binding:"required"`
 }
 
 type CabinetOutput struct {
@@ -84,12 +84,24 @@ func (uc *CabinetUseCase) List(ctx context.Context, p domain.Pagination) ([]Cabi
 }
 
 func (uc *CabinetUseCase) Update(ctx context.Context, id string, input UpdateCabinetInput) (*CabinetOutput, error) {
-	cabinet := &domain.Cabinet{
-		ID:       id,
-		Name:     input.Name,
-		Location: utils.StringPtrOrNil(input.Location),
-		TeamID:   utils.StringPtrOrNil(input.TeamID),
-		TenantID: utils.StringPtrOrNil(input.TenantID),
+	cabinet, err := uc.svc.GetByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	// Apply updates
+	if input.Name != nil {
+		cabinet.Name = *input.Name
+	}
+	if input.Location != nil {
+		cabinet.Location = input.Location // Location is already *string in domain
+	}
+	if input.TeamID != nil {
+		cabinet.TeamID = input.TeamID
+	}
+	// TenantID is usually immutable or handled carefully, but if we allow moving:
+	if input.TenantID != "" {
+		cabinet.TenantID = &input.TenantID
 	}
 
 	if err := uc.svc.Update(ctx, cabinet); err != nil {
